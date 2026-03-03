@@ -322,3 +322,38 @@ footer{
   background:#ef4444;
   box-shadow:0 0 12px #ef4444;
 }
+
+/* ===== 지도 날씨 아이콘 스타일 ===== */
+
+.wxmk-icon{
+  font-size:30px;      /* 아이콘 크기 */
+  line-height:1;
+}
+
+.wxmk{
+  width:76px;
+  height:76px;
+  border-radius:18px;
+  background:rgba(255,255,255,.95);
+  border:3px solid #12b76a;
+  box-shadow:0 14px 30px rgba(0,0,0,.18);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  backdrop-filter: blur(8px);
+}
+
+.wxmk-temp{
+  font-weight:900;
+  font-size:16px;
+  margin-top:2px;
+  color:#111;
+}
+
+.wxmk-name{
+  font-weight:800;
+  font-size:12px;
+  margin-top:4px;
+  color:#1e3932;
+}
