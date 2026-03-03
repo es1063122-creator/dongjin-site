@@ -117,3 +117,208 @@ footer{
 .normal{background:#12b76a;color:#fff;}
 .caution-status{background:#f59e0b;color:#fff;}
 .danger{background:#ef4444;color:#fff;}
+
+/* ====== HOME UPGRADE ====== */
+.home-wrap{max-width:1300px;margin:0 auto;padding:18px 18px 40px;}
+.top-glass{display:flex;gap:18px;justify-content:space-between;align-items:stretch}
+.top-left{min-width:320px}
+.top-right{display:flex;align-items:center;justify-content:flex-end}
+.top-chips{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;
+  background:rgba(255,255,255,.12);color:#fff;text-decoration:none;font-weight:700;font-size:13px;
+  border:1px solid rgba(255,255,255,.16);backdrop-filter: blur(8px);}
+.chip:hover{background:rgba(255,255,255,.18)}
+
+.hq-mini{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.14);
+  border-radius:18px;padding:14px 16px;max-width:520px;backdrop-filter: blur(10px);}
+.hq-title{font-weight:800;font-size:14px;opacity:.95;margin-bottom:10px}
+.hq-row{display:grid;grid-template-columns:140px 1fr;gap:14px;align-items:center}
+.hq-stat .big{font-size:34px;font-weight:900;line-height:1}
+.hq-ment{font-weight:800;font-size:14px;line-height:1.3}
+.hq-alert{margin-top:8px;font-size:13px;opacity:.9}
+
+.hero2{position:relative;border-radius:26px;overflow:hidden;margin:18px 0 26px;box-shadow:0 30px 60px rgba(0,0,0,.12);}
+.hero2-bg{position:absolute;inset:0;background:
+  radial-gradient(circle at 20% 20%, rgba(46,105,90,.55), transparent 42%),
+  radial-gradient(circle at 80% 30%, rgba(255,255,255,.22), transparent 40%),
+  radial-gradient(circle at 30% 90%, rgba(0,0,0,.18), transparent 45%),
+  linear-gradient(135deg, #1e3932, #0b1f1b);
+}
+.hero2-inner{position:relative;padding:44px 26px;color:#fff;max-width:980px}
+.hero2-badge{display:inline-flex;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.16);font-weight:800;font-size:13px}
+.hero2 h1{margin:14px 0 10px;font-size:34px;letter-spacing:-.5px}
+.hero2 p{margin:0;color:rgba(255,255,255,.85);font-weight:600}
+.hero2-actions{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+
+.btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;
+  border-radius:14px;background:#ffffff;color:#1e3932;text-decoration:none;font-weight:900;box-shadow:0 16px 30px rgba(0,0,0,.18)}
+.btn-primary:hover{transform:translateY(-2px)}
+.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;
+  border-radius:14px;background:rgba(255,255,255,.10);color:#fff;text-decoration:none;font-weight:900;border:1px solid rgba(255,255,255,.16)}
+.btn-ghost:hover{background:rgba(255,255,255,.14)}
+
+.panel{background:#fff;border-radius:22px;padding:18px 18px 16px;box-shadow:0 22px 45px rgba(0,0,0,.08);margin:18px 0}
+.panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+.panel-head h2{margin:0;font-size:20px;font-weight:900}
+.panel-head p{margin:6px 0 0}
+.panel-actions{display:flex;align-items:center;gap:12px}
+.btn-mini{padding:10px 12px;border-radius:12px;border:1px solid rgba(0,0,0,.08);background:#f6f4ee;font-weight:900;cursor:pointer}
+.btn-mini:hover{filter:brightness(.98)}
+.small{font-size:12px}
+
+.korea-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+.korea-map-card,.korea-cities-card{background:#f6f4ee;border-radius:18px;padding:14px;position:relative;overflow:hidden}
+.korea-map-title{font-weight:900;margin-bottom:10px}
+.korea-map{height:520px;border-radius:16px;background:linear-gradient(180deg,#ffffff, #f6f4ee);position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.06)}
+.korea-svg{position:absolute;inset:0;width:100%;height:100%}
+.korea-shape{fill:#ffffff;stroke:rgba(0,0,0,.06);stroke-width:2}
+.korea-glow{fill:none;stroke:rgba(46,105,90,.18);stroke-width:10;filter: blur(6px)}
+.korea-map-legend{margin-top:10px;display:flex;gap:14px;align-items:center;font-weight:800;font-size:12px;color:#333}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot.ok{background:#12b76a}.dot.warn{background:#f59e0b}.dot.stop{background:#ef4444}
+
+#koreaMarkers{position:absolute;inset:0}
+.mk{position:absolute;transform:translate(-50%,-50%);pointer-events:none}
+.mk .mk-dot{width:10px;height:10px;border-radius:50%;display:block;position:relative;z-index:2}
+.mk .mk-ring{width:34px;height:34px;border-radius:50%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  opacity:.25;animation:pulse 1.8s infinite}
+.mk .mk-label{position:absolute;left:14px;top:-8px;font-weight:900;font-size:12px;background:rgba(255,255,255,.9);
+  padding:4px 8px;border-radius:999px;border:1px solid rgba(0,0,0,.06)}
+.mk.ok .mk-dot{background:#12b76a}.mk.ok .mk-ring{background:#12b76a}
+.mk.warn .mk-dot{background:#f59e0b}.mk.warn .mk-ring{background:#f59e0b}
+.mk.stop .mk-dot{background:#ef4444}.mk.stop .mk-ring{background:#ef4444}
+
+@keyframes pulse{
+  0%{transform:translate(-50%,-50%) scale(.65);opacity:.25}
+  70%{transform:translate(-50%,-50%) scale(1.15);opacity:.08}
+  100%{transform:translate(-50%,-50%) scale(1.2);opacity:0}
+}
+
+.city-cards{display:grid;grid-template-columns:1fr;gap:12px;max-height:520px;overflow:auto;padding-right:4px}
+.city-card{background:#fff;border-radius:16px;padding:14px;border:1px solid rgba(0,0,0,.06);position:relative;overflow:hidden}
+.city-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.city-name{font-weight:900;font-size:16px}
+.city-temp{font-weight:900;font-size:26px;line-height:1}
+.city-mid{display:flex;gap:8px;align-items:center;margin:10px 0}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;font-weight:900;font-size:12px;color:#fff}
+.pill.ok{background:#12b76a}.pill.warn{background:#f59e0b}.pill.stop{background:#ef4444}
+.pill2{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border-radius:999px;font-weight:900;font-size:12px;background:#f6f4ee}
+.city-ment{font-weight:800;line-height:1.3;margin-top:6px}
+.city-alert{margin-top:8px;font-size:12px}
+
+.footer2{text-align:center;padding:26px 0 6px;color:#777;font-size:13px}
+
+/* ====== Weather micro animations ====== */
+.wx-anim{position:absolute;right:-8px;bottom:-10px;width:150px;height:120px;opacity:.25;pointer-events:none}
+.wx-sun{position:absolute;right:22px;bottom:26px;width:36px;height:36px;border-radius:50%;background:#f6c453;filter: blur(.2px);animation:spin 6s linear infinite;display:none}
+.wx-cloud{position:absolute;right:18px;bottom:24px;width:64px;height:26px;border-radius:20px;background:#cfd8dc;display:none}
+.wx-rain{position:absolute;right:30px;bottom:0;width:40px;height:40px;display:none;background:
+  radial-gradient(circle, rgba(30,57,50,.55) 28%, transparent 29%) 0 0/10px 10px;
+  animation:rain 1s linear infinite}
+.wx-snow{position:absolute;right:30px;bottom:0;width:40px;height:40px;display:none;background:
+  radial-gradient(circle, rgba(30,57,50,.55) 25%, transparent 26%) 0 0/12px 12px;
+  animation:snow 1.5s linear infinite}
+
+.anim-sun .wx-sun{display:block}
+.anim-cloud .wx-cloud{display:block}
+.anim-rain .wx-cloud{display:block}.anim-rain .wx-rain{display:block}
+.anim-snow .wx-cloud{display:block}.anim-snow .wx-snow{display:block}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rain{
+  0%{background-position:0 0;opacity:.35}
+  100%{background-position:0 18px;opacity:.25}
+}
+@keyframes snow{
+  0%{background-position:0 0;opacity:.35}
+  100%{background-position:10px 14px;opacity:.22}
+}
+
+@media (max-width: 980px){
+  .top-glass{flex-direction:column}
+  .hq-row{grid-template-columns:1fr}
+  .korea-grid{grid-template-columns:1fr}
+  .korea-map{height:460px}
+}
+
+/* ===== 현장 바로가기 고급 UI ===== */
+
+.site-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:20px;
+  margin-top:20px;
+}
+
+.site-card{
+  position:relative;
+  padding:22px;
+  border-radius:20px;
+  background:rgba(255,255,255,.95);
+  box-shadow:0 20px 40px rgba(0,0,0,.08);
+  text-decoration:none;
+  transition:all .3s ease;
+  overflow:hidden;
+}
+
+.site-card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 30px 60px rgba(0,0,0,.18);
+}
+
+.site-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.site-name{
+  font-size:20px;
+  font-weight:900;
+  margin-top:15px;
+  color:#1e3932;
+}
+
+.site-addr{
+  font-size:13px;
+  margin-top:6px;
+  color:#666;
+}
+
+/* 지역 배지 */
+.site-badge{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  color:#fff;
+}
+
+.site-badge.seoul{background:#3b82f6;}
+.site-badge.ulsan{background:#10b981;}
+.site-badge.gyeonggi{background:#6366f1;}
+.site-badge.gyeongnam{background:#f59e0b;}
+
+/* LED 상태 점 */
+.site-led{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  box-shadow:0 0 10px rgba(0,0,0,.2);
+}
+
+.site-led.green{
+  background:#12b76a;
+  box-shadow:0 0 12px #12b76a;
+}
+
+.site-led.orange{
+  background:#f59e0b;
+  box-shadow:0 0 12px #f59e0b;
+}
+
+.site-led.red{
+  background:#ef4444;
+  box-shadow:0 0 12px #ef4444;
+}

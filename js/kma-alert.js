@@ -1,8 +1,7 @@
 // js/kma-alert.js
 // ✅ 공공데이터포털(data.go.kr) 기상청_기상특보 조회서비스 서비스키
 // ⚠️ URL 인코딩된 serviceKey를 넣으세요(일반적으로 발급 키는 이미 인코딩 형태로 제공됨).
-const KMA_SERVICE_KEY = "	
-d3153c6bbc3d8f31d48919bbb714713a66af60facfd107eb0b3ff8aa0587a6ce";
+const KMA_SERVICE_KEY = "d3153c6bbc3d8f31d48919bbb714713a66af60facfd107eb0b3ff8aa0587a6ce";
 
 function ymdhm(date){
   const pad = (n)=> String(n).padStart(2,"0");

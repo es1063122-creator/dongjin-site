@@ -8,117 +8,191 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 
+<!-- ✅ Leaflet 실제 지도 추가 -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script src="js/weather.js"></script>
 <script src="js/kma-alert.js"></script>
+<script src="js/korea-weather-map.js"></script>
 
 <style>
-.hero-btns{display:flex;gap:20px;justify-content:center;margin-top:30px;}
-.main-btn{background:#1e3932;color:#fff;padding:14px 28px;border-radius:30px;text-decoration:none;font-weight:700;transition:.3s;}
-.main-btn:hover{background:#2d5a4f;transform:translateY(-3px);}
-.section-title{text-align:center;margin-top:60px;font-size:22px;font-weight:800;}
-.hq-card{max-width:900px;margin:40px auto 0;padding:28px;border-radius:20px;background:#fff;box-shadow:0 20px 40px rgba(0,0,0,.08);}
-.hq-title{font-weight:800;font-size:20px;margin-bottom:10px;}
-.hq-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:15px;}
-.hq-box{background:#f6f4ee;padding:18px;border-radius:14px;}
-@media(max-width:768px){.hq-grid{grid-template-columns:1fr;}}
+#koreaMapReal{
+  height:520px;
+  border-radius:20px;
+}
 </style>
-</head>
 
+</head>
 <body>
 
-<header class="top">
-  <div class="logo">DONGJIN CONSTRUCTION</div>
-  <div class="subtitle">현장 통합 관제 시스템</div>
-</header>
-
-<section class="hero">
-  <h1>Smart Safety Monitoring</h1>
-  <p>실시간 날씨 · 기상특보 · 작업판단 자동 시스템</p>
-
-  <div class="hero-btns">
-    <a href="dashboard.html" class="main-btn">📊 통합 관제 대시보드</a>
-  </div>
-</section>
-
-<!-- 🔥 본사 하남 미사 날씨 -->
-<section class="hq-card">
-  <div class="hq-title">🏢 본사 (하남 미사) 날씨 브리핑</div>
-
-  <div class="hq-grid">
-    <div class="hq-box" id="hqWeather">날씨 불러오는 중...</div>
-    <div class="hq-box">
-      <div id="hqMent">멘트 판단 중...</div>
-      <div style="margin-top:10px;font-weight:600;" id="hqAlert">특보 확인 중...</div>
+<header class="top top-glass">
+  <div class="top-left">
+    <div class="logo">DONGJIN CONSTRUCTION</div>
+    <div class="subtitle">현장 통합 관제 시스템</div>
+    <div class="top-chips">
+      <a class="chip" href="dashboard.html">통합 관제</a>
+      <a class="chip" href="briefing.html?site=ulsan-woojung">모바일 브리핑</a>
     </div>
   </div>
-</section>
 
-<div class="section-title">현장 선택</div>
+  <div class="top-right">
+    <div class="hq-mini">
+      <div class="hq-title">🏢 본사 (하남 미사)</div>
+      <div class="hq-row">
+        <div id="hqWeather" class="hq-stat">불러오는 중...</div>
+        <div>
+          <div id="hqMent" class="hq-ment">멘트 판단 중...</div>
+          <div id="hqAlert" class="hq-alert">특보 확인 중...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
 
-<main class="grid">
+<main class="home-wrap">
 
-  <a class="card" href="site.html?site=ulsan-woojung">
-    <div class="badge">울산</div>
-    <h2>우정동 현장</h2>
-    <p>울산 중구 우정동 25-12</p>
+  <!-- HERO -->
+  <section class="hero2">
+    <div class="hero2-bg"></div>
+    <div class="hero2-inner">
+      <div class="hero2-badge">Smart Safety Monitoring</div>
+      <h1>날씨 · 특보 · 작업판단을 한 화면에</h1>
+      <p>전국 상황 + 현장별 브리핑을 자동으로 제공합니다.</p>
+    </div>
+  </section>
+
+  <!-- ✅ 실제 대한민국 지도 -->
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>🇰🇷 대한민국 실시간 지도</h2>
+        <p class="muted">확대/축소 가능 · 도시 클릭 시 상세 표시</p>
+      </div>
+      <div class="panel-actions">
+        <button class="btn-mini" onclick="initRealKoreaMap()">새로고침</button>
+      </div>
+    </div>
+
+    <div id="koreaMapReal"></div>
+
+    <div class="korea-map-legend" style="margin-top:15px;">
+      <span class="dot ok"></span> 작업 가능
+      <span class="dot warn"></span> 부분 통제
+      <span class="dot stop"></span> 작업 중지
+    </div>
+  </section>
+
+  <!-- SITES -->
+  <section class="panel" id="sites">
+    <div class="panel-head">
+      <div>
+        <h2>현장 바로가기</h2>
+        <p class="muted">현장별 브리핑 확인</p>
+      </div>
+    </div>
+
+    <div class="site-grid">
+
+  <a class="site-card" href="site.html?site=ulsan-woojung">
+    <div class="site-top">
+      <span class="site-badge ulsan">울산</span>
+      <span class="site-led green"></span>
+    </div>
+    <div class="site-name">우정동 현장</div>
+    <div class="site-addr">울산 중구 우정동 25-12</div>
   </a>
 
-  <a class="card" href="site.html?site=ulsan-taehwa">
-    <div class="badge">울산</div>
-    <h2>태화강 현장</h2>
-    <p>울산 울주군 범서읍 14-9</p>
+  <a class="site-card" href="site.html?site=ulsan-taehwa">
+    <div class="site-top">
+      <span class="site-badge ulsan">울산</span>
+      <span class="site-led green"></span>
+    </div>
+    <div class="site-name">태화강 현장</div>
+    <div class="site-addr">울산 울주군 범서읍 14-9</div>
   </a>
 
-  <a class="card" href="site.html?site=mapo-3-1">
-    <div class="badge">서울</div>
-    <h2>마포로3-1 현장</h2>
-    <p>서울 마포구 아현동 613-6</p>
+  <a class="site-card" href="site.html?site=mapo-3-1">
+    <div class="site-top">
+      <span class="site-badge seoul">서울</span>
+      <span class="site-led green"></span>
+    </div>
+    <div class="site-name">마포로3-1</div>
+    <div class="site-addr">서울 마포구 아현동 613-6</div>
   </a>
 
-  <a class="card" href="site.html?site=gimhae-science">
-    <div class="badge">경남</div>
-    <h2>김해 사이언스</h2>
-    <p>김해시 한림면 김해대로 1216-10</p>
+  <a class="site-card" href="site.html?site=gimhae-science">
+    <div class="site-top">
+      <span class="site-badge gyeongnam">경남</span>
+      <span class="site-led green"></span>
+    </div>
+    <div class="site-name">김해 사이언스</div>
+    <div class="site-addr">김해시 한림면 김해대로 1216-10</div>
   </a>
 
-  <a class="card" href="site.html?site=paju-pmc">
-    <div class="badge">경기</div>
-    <h2>파주 PMC</h2>
-    <p>파주시 동패동 1496</p>
+  <a class="site-card" href="site.html?site=paju-pmc">
+    <div class="site-top">
+      <span class="site-badge gyeonggi">경기</span>
+      <span class="site-led green"></span>
+    </div>
+    <div class="site-name">파주 PMC</div>
+    <div class="site-addr">파주시 동패동 1496</div>
   </a>
 
-  <a class="card" href="site.html?site=gangbyeon-ipark">
-    <div class="badge">서울</div>
-    <h2>강변 아이파크</h2>
-    <p>서울 광진구 자양동 809</p>
+  <a class="site-card" href="site.html?site=gangbyeon-ipark">
+    <div class="site-top">
+      <span class="site-badge seoul">서울</span>
+      <span class="site-led green"></span>
+    </div>
+    <div class="site-name">강변 아이파크</div>
+    <div class="site-addr">서울 광진구 자양동 809</div>
   </a>
+
+  <a class="site-card" href="site.html?site=ilsan-jichuk">
+    <div class="site-top">
+      <span class="site-badge gyeonggi">경기</span>
+      <span class="site-led green"></span>
+    </div>
+    <div class="site-name">일산 고양지축</div>
+    <div class="site-addr">고양시 덕양구 지축동</div>
+  </a>
+
+  <a class="site-card" href="site.html?site=yangpyeong-deokpyeong">
+    <div class="site-top">
+      <span class="site-badge gyeonggi">경기</span>
+      <span class="site-led green"></span>
+    </div>
+    <div class="site-name">양평 덕평</div>
+    <div class="site-addr">경기도 양평군</div>
+  </a>
+
+</div>
+  </section>
+
+  <footer class="footer2">
+    © 2026 DONGJIN CONSTRUCTION
+  </footer>
 
 </main>
 
-<footer>
-  © 2026 DONGJIN CONSTRUCTION · Safety Intelligence Platform
-</footer>
-
 <script>
-// 🔥 하남 미사 좌표
 const HQ_LAT = 37.5665;
 const HQ_LON = 127.1903;
-const HQ_STN = 108; // 서울권
+const HQ_STN = 108;
 
 (async ()=>{
   const w = await loadSiteWeatherAndMent(HQ_LAT, HQ_LON);
 
-  document.getElementById("hqWeather").innerHTML = `
-    🌡 ${w.current.temp}°C<br>
-    💨 ${w.current.wind} m/s<br>
-    💧 습도 ${w.current.humidity}%<br>
-    ☁ ${w.current.desc}
-  `;
+  document.getElementById("hqWeather").innerHTML =
+    `<div class="big">${w.current.temp}°C</div>`;
 
   document.getElementById("hqMent").innerText = w.decision.mainMsg;
 
   const alert = await fetchKmaAlertSummary(HQ_STN);
-  document.getElementById("hqAlert").innerText = "📣 " + alert.text;
+  document.getElementById("hqAlert").innerText =
+    "📣 " + (alert.text || "특보 없음");
+
+  initRealKoreaMap();   // ✅ 여기 중요
 })();
 </script>
 
