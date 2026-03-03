@@ -8,39 +8,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 
+<script src="js/weather.js"></script>
+<script src="js/kma-alert.js"></script>
+
 <style>
-/* 인덱스 전용 스타일 추가 */
-.hero-btns{
-  display:flex;
-  gap:20px;
-  justify-content:center;
-  margin-top:30px;
-}
-
-.main-btn{
-  background:#1e3932;
-  color:#fff;
-  padding:14px 28px;
-  border-radius:30px;
-  text-decoration:none;
-  font-weight:700;
-  transition:.3s;
-}
-
-.main-btn:hover{
-  background:#2d5a4f;
-  transform:translateY(-3px);
-}
-
-.section-title{
-  text-align:center;
-  margin-top:60px;
-  font-size:22px;
-  font-weight:800;
-}
+.hero-btns{display:flex;gap:20px;justify-content:center;margin-top:30px;}
+.main-btn{background:#1e3932;color:#fff;padding:14px 28px;border-radius:30px;text-decoration:none;font-weight:700;transition:.3s;}
+.main-btn:hover{background:#2d5a4f;transform:translateY(-3px);}
+.section-title{text-align:center;margin-top:60px;font-size:22px;font-weight:800;}
+.hq-card{max-width:900px;margin:40px auto 0;padding:28px;border-radius:20px;background:#fff;box-shadow:0 20px 40px rgba(0,0,0,.08);}
+.hq-title{font-weight:800;font-size:20px;margin-bottom:10px;}
+.hq-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:15px;}
+.hq-box{background:#f6f4ee;padding:18px;border-radius:14px;}
+@media(max-width:768px){.hq-grid{grid-template-columns:1fr;}}
 </style>
-
 </head>
+
 <body>
 
 <header class="top">
@@ -54,7 +37,19 @@
 
   <div class="hero-btns">
     <a href="dashboard.html" class="main-btn">📊 통합 관제 대시보드</a>
-    <a href="briefing.html?site=ulsan-woojung" class="main-btn">📱 모바일 브리핑</a>
+  </div>
+</section>
+
+<!-- 🔥 본사 하남 미사 날씨 -->
+<section class="hq-card">
+  <div class="hq-title">🏢 본사 (하남 미사) 날씨 브리핑</div>
+
+  <div class="hq-grid">
+    <div class="hq-box" id="hqWeather">날씨 불러오는 중...</div>
+    <div class="hq-box">
+      <div id="hqMent">멘트 판단 중...</div>
+      <div style="margin-top:10px;font-weight:600;" id="hqAlert">특보 확인 중...</div>
+    </div>
   </div>
 </section>
 
@@ -98,23 +93,34 @@
     <p>서울 광진구 자양동 809</p>
   </a>
 
-  <a class="card" href="site.html?site=ilsan-jichuk">
-    <div class="badge">경기</div>
-    <h2>일산 고양지축</h2>
-    <p>고양시 덕양구 지축동</p>
-  </a>
-
-  <a class="card" href="site.html?site=yangpyeong-deokpyeong">
-    <div class="badge">경기</div>
-    <h2>양평 덕평</h2>
-    <p>경기도 양평군</p>
-  </a>
-
 </main>
 
 <footer>
   © 2026 DONGJIN CONSTRUCTION · Safety Intelligence Platform
 </footer>
+
+<script>
+// 🔥 하남 미사 좌표
+const HQ_LAT = 37.5665;
+const HQ_LON = 127.1903;
+const HQ_STN = 108; // 서울권
+
+(async ()=>{
+  const w = await loadSiteWeatherAndMent(HQ_LAT, HQ_LON);
+
+  document.getElementById("hqWeather").innerHTML = `
+    🌡 ${w.current.temp}°C<br>
+    💨 ${w.current.wind} m/s<br>
+    💧 습도 ${w.current.humidity}%<br>
+    ☁ ${w.current.desc}
+  `;
+
+  document.getElementById("hqMent").innerText = w.decision.mainMsg;
+
+  const alert = await fetchKmaAlertSummary(HQ_STN);
+  document.getElementById("hqAlert").innerText = "📣 " + alert.text;
+})();
+</script>
 
 </body>
 </html>
