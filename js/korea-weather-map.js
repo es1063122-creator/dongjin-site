@@ -25,9 +25,18 @@ function levelColor(level){
   return "#12b76a";
 }
 
-function owmIconUrl(iconCode){
-  const code = iconCode || "01d";
-  return `https://openweathermap.org/img/wn/${code}@2x.png`;
+function weatherEmoji(iconCode){
+  const c = iconCode || "01d";
+  if(c.startsWith("01")) return "☀️";
+  if(c.startsWith("02")) return "🌤";
+  if(c.startsWith("03")) return "⛅";
+  if(c.startsWith("04")) return "☁️";
+  if(c.startsWith("09")) return "🌧";
+  if(c.startsWith("10")) return "🌦";
+  if(c.startsWith("11")) return "⛈";
+  if(c.startsWith("13")) return "🌨";
+  if(c.startsWith("50")) return "🌫";
+  return "🌡";
 }
 
 function ensureMarkerStyle(){
@@ -36,17 +45,16 @@ function ensureMarkerStyle(){
   s.id = "dj-wxmk-style";
   s.textContent = `
     .dj-wxmk{
-      width:86px;height:86px;border-radius:20px;
+      width:86px; height:86px; border-radius:20px;
       background:rgba(255,255,255,.96);
       border:3px solid #12b76a;
-      box-shadow:0 18px 38px rgba(0,0,0,.18);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      box-shadow:0 8px 24px rgba(0,0,0,.15);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
       backdrop-filter: blur(10px);
-      transform: translateY(-8px);
     }
-    .dj-wxmk-icon{width:46px;height:46px;margin-top:-6px}
-    .dj-wxmk-temp{font-weight:900;font-size:16px;line-height:1;margin-top:-4px;color:#111}
-    .dj-wxmk-name{font-weight:900;font-size:12px;line-height:1;margin-top:6px;color:#1e3932}
+    .dj-wxmk-emoji{ font-size:26px; line-height:1; }
+    .dj-wxmk-temp{ font-weight:900; font-size:15px; line-height:1; margin-top:3px; color:#111; }
+    .dj-wxmk-name{ font-weight:900; font-size:11px; line-height:1; margin-top:5px; color:#1e3932; }
     .leaflet-popup-content{ margin:12px 14px; }
   `;
   document.head.appendChild(s);
@@ -168,13 +176,21 @@ function renderChart(data){
       datasets: [{
         label: "기온(°C)",
         data: temps,
-        tension: 0.35
+        tension: 0.35,
+        borderColor: "#2d6a4f",
+        backgroundColor: "rgba(45,106,79,.08)",
+        pointBackgroundColor: "#2d6a4f",
+        pointRadius: 4,
+        fill: true
       }]
     },
     options: {
+      responsive: true,
+      maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        y: { ticks: { callback: (v)=> `${v}°` } }
+        y: { ticks: { callback: (v)=> `${v}°`, font: { size: 11 } } },
+        x: { ticks: { font: { size: 11 } } }
       }
     }
   });
@@ -270,10 +286,11 @@ async function initRealKoreaMap(){
     const level = w?.decision?.level || "normal";
     const border = levelColor(level);
 
+    const emoji  = weatherEmoji(iconCode);
+
     const html = `
       <div class="dj-wxmk" style="border-color:${border}">
-        <img class="dj-wxmk-icon" src="${owmIconUrl(iconCode)}"
-             onerror="this.onerror=null;this.src='https://openweathermap.org/img/wn/01d@2x.png';" />
+        <div class="dj-wxmk-emoji">${emoji}</div>
         <div class="dj-wxmk-temp">${Math.round(temp)}°</div>
         <div class="dj-wxmk-name">${c.name}</div>
       </div>

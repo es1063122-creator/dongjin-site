@@ -264,6 +264,25 @@ a { text-decoration: none; color: inherit; }
   grid-template-columns: 2fr 1fr;
   gap: 24px;
   margin-top: 10px;
+  min-width: 0; /* grid 오버플로 방지 */
+}
+
+.forecast-left {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.forecast-right {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.forecast-left h3,
+.forecast-right h3 {
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: #1e3932;
 }
 
 .chart-wrap {
@@ -271,60 +290,72 @@ a { text-decoration: none; color: inherit; }
   border-radius: 16px;
   padding: 14px;
   border: 1px solid rgba(0,0,0,.06);
+  position: relative;  /* canvas 비율 유지를 위해 */
+  width: 100%;
 }
 
-#weatherChart { height: 220px; }
+#weatherChart {
+  height: 200px;
+  width: 100% !important;  /* 부모 너비 강제 준수 */
+  display: block;
+}
 
 /* 시간별 */
 .hourly-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
-  padding: 10px 0;
+  padding: 6px 0 10px;
   scrollbar-width: thin;
+  scrollbar-color: #ddd transparent;
+  -webkit-overflow-scrolling: touch;
 }
+.hourly-row::-webkit-scrollbar { height: 4px; }
+.hourly-row::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
 
 .hour-card {
-  min-width: 80px;
+  min-width: 74px;
   background: #fff;
-  border-radius: 14px;
-  padding: 10px 8px;
+  border-radius: 12px;
+  padding: 8px 6px;
   text-align: center;
   border: 1px solid rgba(0,0,0,.06);
-  box-shadow: 0 4px 12px rgba(0,0,0,.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
   flex-shrink: 0;
+  font-size: 13px;
 }
 
-.hour-card img { width: 36px; }
+.hour-card img { width: 32px; }
 
 /* 주간 */
 .daily-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .day-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  border-radius: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
   background: #fff;
   border: 1px solid rgba(0,0,0,.06);
-  box-shadow: 0 4px 12px rgba(0,0,0,.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
 }
 
 .day-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
 }
 
-.day-card img { width: 32px; }
-.day-name { font-weight: 800; font-size: 14px; }
-.day-desc { font-size: 12px; color: #666; }
-.day-temp { font-weight: 900; font-size: 16px; }
+.day-card img { width: 28px; flex-shrink: 0; }
+.day-name { font-weight: 800; font-size: 13px; }
+.day-desc { font-size: 11px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; }
+.day-temp { font-weight: 900; font-size: 15px; flex-shrink: 0; }
 
 /* 작업 브리핑 */
 .brief-box {
@@ -545,8 +576,10 @@ a { text-decoration: none; color: inherit; }
   /* 지도 */
   #koreaMapReal { height: 300px; }
 
-  /* 예보 그리드 */
-  .forecast-grid { grid-template-columns: 1fr; gap: 16px; }
+  /* 예보 그리드 - 모바일에서 단일 컬럼 */
+  .forecast-grid { grid-template-columns: 1fr; gap: 14px; }
+  .forecast-left, .forecast-right { width: 100%; }
+  #weatherChart { height: 180px; }
   .panel-head h2 { font-size: 15px; }
 
   /* 현장 그리드 */
@@ -573,9 +606,16 @@ a { text-decoration: none; color: inherit; }
   .korea-map-legend { font-size: 11px; gap: 10px; }
 
   /* 예보 */
-  .hour-card { min-width: 68px; padding: 8px 6px; }
-  .hour-card img { width: 28px; }
-  #weatherChart { height: 160px; }
+  .hour-card { min-width: 62px; padding: 7px 4px; font-size: 11px; border-radius: 10px; }
+  .hour-card img { width: 24px; }
+  #weatherChart { height: 150px; }
+  .day-card { padding: 8px 10px; }
+  .day-name { font-size: 12px; }
+  .day-desc { font-size: 10px; max-width: 70px; }
+  .day-temp { font-size: 13px; }
+  .day-card img { width: 24px; }
+  .brief-box { padding: 12px; }
+  .forecast-left h3, .forecast-right h3 { font-size: 13px; }
 
   /* 현장 그리드: 1열 */
   .site-grid { grid-template-columns: 1fr; }
