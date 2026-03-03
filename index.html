@@ -1,38 +1,43 @@
 <!doctype html>
 <html lang="ko">
 <head>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>동진토건 현장 통합 관제 포털</title>
 
+<!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
 
-<!-- ✅ Leaflet 실제 지도 추가 -->
+<!-- CSS -->
+<link rel="stylesheet" href="./css/style.css">
+
+<!-- Leaflet 지도 -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script src="js/weather.js"></script>
-<script src="js/kma-alert.js"></script>
-<script src="js/korea-weather-map.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<style>
-#koreaMapReal{
-  height:520px;
-  border-radius:20px;
-}
-</style>
+<!-- JS -->
+<script src="./js/weather.js"></script>
+<script src="./js/kma-alert.js"></script>
+<script src="./js/korea-weather-map.js"></script>
 
 </head>
 <body>
 
 <header class="top top-glass">
   <div class="top-left">
-    <div class="logo">DONGJIN CONSTRUCTION</div>
+    <div class="logo-wrap">
+      <div class="logo">DONGJIN CONSTRUCTION</div>
+      <div class="logo-sub">KDH-safety</div>
+    </div>
     <div class="subtitle">현장 통합 관제 시스템</div>
     <div class="top-chips">
       <a class="chip" href="dashboard.html">통합 관제</a>
-      <a class="chip" href="briefing.html?site=ulsan-woojung">모바일 브리핑</a>
+      <a class="chip" href="#sites">현장 바로가기</a>
     </div>
   </div>
 
@@ -58,16 +63,20 @@
     <div class="hero2-inner">
       <div class="hero2-badge">Smart Safety Monitoring</div>
       <h1>날씨 · 특보 · 작업판단을 한 화면에</h1>
-      <p>전국 상황 + 현장별 브리핑을 자동으로 제공합니다.</p>
+      <p>지도에서 도시/현장을 클릭하면 하단에 시간별·주간 예보가 자동 표시됩니다.</p>
+      <div class="hero2-actions">
+        <a class="btn-primary" href="dashboard.html">📊 통합 관제 대시보드</a>
+        <a class="btn-ghost" href="#korea">🗺 지도 보기</a>
+      </div>
     </div>
   </section>
 
-  <!-- ✅ 실제 대한민국 지도 -->
-  <section class="panel">
+  <!-- 지도 -->
+  <section class="panel" id="korea">
     <div class="panel-head">
       <div>
         <h2>🇰🇷 대한민국 실시간 지도</h2>
-        <p class="muted">확대/축소 가능 · 도시 클릭 시 상세 표시</p>
+        <p class="muted">확대/축소 가능 · 마커 클릭 시 상세 예보 표시</p>
       </div>
       <div class="panel-actions">
         <button class="btn-mini" onclick="initRealKoreaMap()">새로고침</button>
@@ -83,117 +92,128 @@
     </div>
   </section>
 
-  <!-- SITES -->
+  <!-- ✅ 하단 예보 패널 (지도 클릭 시 자동 표시) -->
+  <section class="panel" id="forecastPanel">
+    <div class="panel-head">
+      <div>
+        <h2 id="forecastTitle">현장 날씨 관제</h2>
+        <p class="muted" id="forecastSub">지도에서 도시/현장을 클릭하면 상세 예보가 나타납니다.</p>
+      </div>
+      <div class="panel-actions">
+        <span class="small muted" id="forecastUpdated"></span>
+      </div>
+    </div>
+
+    <div class="forecast-grid">
+      <div class="forecast-left">
+        <h3>시간별(24시간) 기온</h3>
+        <div class="chart-wrap">
+          <canvas id="weatherChart"></canvas>
+        </div>
+
+        <h3 style="margin-top:18px;">시간별 날씨(24시간)</h3>
+        <div id="hourlyWeather" class="hourly-row"></div>
+      </div>
+
+      <div class="forecast-right">
+        <h3>주간(5일) 예보</h3>
+        <div id="dailyWeather" class="daily-row"></div>
+
+        <div class="brief-box">
+          <div class="brief-title">작업 브리핑</div>
+          <div id="briefStatus" class="brief-status">선택 대기</div>
+          <div id="briefMent" class="brief-ment muted">지도에서 도시/현장을 클릭하세요.</div>
+          <div id="briefAlert" class="brief-alert muted">📣 특보: -</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ✅ 현장 바로가기 (기본정보 섹션 제거, 링크만) -->
   <section class="panel" id="sites">
     <div class="panel-head">
       <div>
         <h2>현장 바로가기</h2>
-        <p class="muted">현장별 브리핑 확인</p>
+        <p class="muted">현장별 브리핑 화면으로 이동</p>
       </div>
     </div>
 
     <div class="site-grid">
+      <a class="site-card" href="site.html?site=ulsan-woojung">
+        <div class="site-top"><span class="site-badge ulsan">울산</span><span class="site-led green"></span></div>
+        <div class="site-name">우정동 현장</div>
+        <div class="site-addr">울산 중구 우정동 25-12</div>
+      </a>
 
-  <a class="site-card" href="site.html?site=ulsan-woojung">
-    <div class="site-top">
-      <span class="site-badge ulsan">울산</span>
-      <span class="site-led green"></span>
+      <a class="site-card" href="site.html?site=ulsan-taehwa">
+        <div class="site-top"><span class="site-badge ulsan">울산</span><span class="site-led green"></span></div>
+        <div class="site-name">태화강 현장</div>
+        <div class="site-addr">울산 울주군 범서읍 14-9</div>
+      </a>
+
+      <a class="site-card" href="site.html?site=mapo-3-1">
+        <div class="site-top"><span class="site-badge seoul">서울</span><span class="site-led green"></span></div>
+        <div class="site-name">마포로3-1</div>
+        <div class="site-addr">서울 마포구 아현동 613-6</div>
+      </a>
+
+      <a class="site-card" href="site.html?site=gimhae-science">
+        <div class="site-top"><span class="site-badge gyeongnam">경남</span><span class="site-led green"></span></div>
+        <div class="site-name">김해 사이언스</div>
+        <div class="site-addr">김해시 한림면 김해대로 1216-10</div>
+      </a>
+
+      <a class="site-card" href="site.html?site=paju-pmc">
+        <div class="site-top"><span class="site-badge gyeonggi">경기</span><span class="site-led green"></span></div>
+        <div class="site-name">파주 PMC</div>
+        <div class="site-addr">파주시 동패동 1496</div>
+      </a>
+
+      <a class="site-card" href="site.html?site=gangbyeon-ipark">
+        <div class="site-top"><span class="site-badge seoul">서울</span><span class="site-led green"></span></div>
+        <div class="site-name">강변 아이파크</div>
+        <div class="site-addr">서울 광진구 자양동 809</div>
+      </a>
+
+      <a class="site-card" href="site.html?site=ilsan-jichuk">
+        <div class="site-top"><span class="site-badge gyeonggi">경기</span><span class="site-led green"></span></div>
+        <div class="site-name">일산 고양지축</div>
+        <div class="site-addr">고양시 덕양구 지축동</div>
+      </a>
+
+      <a class="site-card" href="site.html?site=yangpyeong-deokpyeong">
+        <div class="site-top"><span class="site-badge gyeonggi">경기</span><span class="site-led green"></span></div>
+        <div class="site-name">양평 덕평</div>
+        <div class="site-addr">경기도 양평군</div>
+      </a>
     </div>
-    <div class="site-name">우정동 현장</div>
-    <div class="site-addr">울산 중구 우정동 25-12</div>
-  </a>
-
-  <a class="site-card" href="site.html?site=ulsan-taehwa">
-    <div class="site-top">
-      <span class="site-badge ulsan">울산</span>
-      <span class="site-led green"></span>
-    </div>
-    <div class="site-name">태화강 현장</div>
-    <div class="site-addr">울산 울주군 범서읍 14-9</div>
-  </a>
-
-  <a class="site-card" href="site.html?site=mapo-3-1">
-    <div class="site-top">
-      <span class="site-badge seoul">서울</span>
-      <span class="site-led green"></span>
-    </div>
-    <div class="site-name">마포로3-1</div>
-    <div class="site-addr">서울 마포구 아현동 613-6</div>
-  </a>
-
-  <a class="site-card" href="site.html?site=gimhae-science">
-    <div class="site-top">
-      <span class="site-badge gyeongnam">경남</span>
-      <span class="site-led green"></span>
-    </div>
-    <div class="site-name">김해 사이언스</div>
-    <div class="site-addr">김해시 한림면 김해대로 1216-10</div>
-  </a>
-
-  <a class="site-card" href="site.html?site=paju-pmc">
-    <div class="site-top">
-      <span class="site-badge gyeonggi">경기</span>
-      <span class="site-led green"></span>
-    </div>
-    <div class="site-name">파주 PMC</div>
-    <div class="site-addr">파주시 동패동 1496</div>
-  </a>
-
-  <a class="site-card" href="site.html?site=gangbyeon-ipark">
-    <div class="site-top">
-      <span class="site-badge seoul">서울</span>
-      <span class="site-led green"></span>
-    </div>
-    <div class="site-name">강변 아이파크</div>
-    <div class="site-addr">서울 광진구 자양동 809</div>
-  </a>
-
-  <a class="site-card" href="site.html?site=ilsan-jichuk">
-    <div class="site-top">
-      <span class="site-badge gyeonggi">경기</span>
-      <span class="site-led green"></span>
-    </div>
-    <div class="site-name">일산 고양지축</div>
-    <div class="site-addr">고양시 덕양구 지축동</div>
-  </a>
-
-  <a class="site-card" href="site.html?site=yangpyeong-deokpyeong">
-    <div class="site-top">
-      <span class="site-badge gyeonggi">경기</span>
-      <span class="site-led green"></span>
-    </div>
-    <div class="site-name">양평 덕평</div>
-    <div class="site-addr">경기도 양평군</div>
-  </a>
-
-</div>
   </section>
 
-  <footer class="footer2">
-    © 2026 DONGJIN CONSTRUCTION
-  </footer>
-
+  <footer class="footer2">© 2026 DONGJIN CONSTRUCTION &nbsp;|&nbsp; <span class="footer-kdh">KDH-safety</span></footer>
 </main>
 
 <script>
-const HQ_LAT = 37.5665;
-const HQ_LON = 127.1903;
-const HQ_STN = 108;
+  // 본사(하남 미사) 좌표(대략)
+  const HQ_LAT = 37.5665;
+  const HQ_LON = 127.1903;
+  const HQ_STN = 108;
 
-(async ()=>{
-  const w = await loadSiteWeatherAndMent(HQ_LAT, HQ_LON);
+  (async ()=>{
+    // 본사 브리핑
+    const w = await loadSiteWeatherAndMent(HQ_LAT, HQ_LON);
+    document.getElementById("hqWeather").innerHTML = `
+      <div class="big">${Math.round(w.current.temp)}°C</div>
+      <div class="small muted">${w.current.desc}</div>
+      <div class="small">💨 ${w.current.wind} m/s · 💧 ${w.current.humidity}%</div>
+    `;
+    document.getElementById("hqMent").innerText = w.decision.mainMsg;
 
-  document.getElementById("hqWeather").innerHTML =
-    `<div class="big">${w.current.temp}°C</div>`;
+    const alert = await fetchKmaAlertSummary(HQ_STN);
+    document.getElementById("hqAlert").innerText = "📣 " + (alert.text || "특보 없음");
 
-  document.getElementById("hqMent").innerText = w.decision.mainMsg;
-
-  const alert = await fetchKmaAlertSummary(HQ_STN);
-  document.getElementById("hqAlert").innerText =
-    "📣 " + (alert.text || "특보 없음");
-
-  initRealKoreaMap();   // ✅ 여기 중요
-})();
+    // 지도 초기화
+    initRealKoreaMap();
+  })();
 </script>
 
 </body>

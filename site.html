@@ -14,7 +14,10 @@
 
 <body>
 <header class="top">
-  <div class="subtitle" id="siteTitle">현장</div>
+  <div class="top-left">
+    <a href="index.html" class="chip" style="font-size:13px;">← 홈</a>
+    <div class="subtitle" id="siteTitle">현장</div>
+  </div>
   <div id="siteStatus" class="status normal">● 작업 가능</div>
 </header>
 
@@ -23,7 +26,7 @@
 <section class="card">
   <h2>📍 현장정보</h2>
   <div id="addr" class="muted"></div>
-  <ul id="infoBox" class="info"></ul>
+
 </section>
 
 <section class="card">
@@ -58,14 +61,6 @@
 
   document.getElementById("siteTitle").innerText = site.name;
   document.getElementById("addr").innerText = site.address || "";
-
-  const infoBox = document.getElementById("infoBox");
-  infoBox.innerHTML = "";
-  Object.entries(site.info || {}).forEach(([k,v])=>{
-    const li = document.createElement("li");
-    li.textContent = `${k} : ${v}`;
-    infoBox.appendChild(li);
-  });
 
   // 1) OpenWeather 기반 판단
   const w = await loadSiteWeatherAndMent(site.lat, site.lon);

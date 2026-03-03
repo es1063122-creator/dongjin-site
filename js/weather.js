@@ -1,9 +1,8 @@
 // js/weather.js
-// 현재날씨 + 예보(12h 요약) + 대기질(PM2.5) + 작업판단 + iconCode 반환(중요)
+// 현재날씨 + 예보(12h 요약) + 대기질(PM2.5) + 작업판단 + iconCode 반환
 
 const OWM_API_KEY = "97c0b999cc307cf079c6106404536f9e";
 
-// 간단 캐시 (현장/도시 여러 번 호출 시 속도 개선)
 const __WX_CACHE = new Map();
 const CACHE_TTL_MS = 60 * 1000;
 
@@ -19,10 +18,8 @@ function __cacheSet(key, data){
 
 function summarizeNext12h(forecast){
   const list = forecast?.list || [];
-  const next = list.slice(0, 4); // 3시간 간격 4개 = 12시간
-
+  const next = list.slice(0, 4);
   let maxWind = 0, maxRain = 0, maxSnow = 0, popMax = 0;
-
   for(const it of next){
     maxWind = Math.max(maxWind, it?.wind?.speed ?? 0);
     maxRain = Math.max(maxRain, it?.rain?.["3h"] ?? 0);
@@ -38,7 +35,6 @@ function decideWorkMessage({temp, wind, rain1h, snow1h, pm25, next12}){
   let mainMsg = "오늘은 작업해도 좋은 날씨입니다.";
   let extra = [];
 
-  // 강풍
   if(wind >= 14 || next12.maxWind >= 14){
     level = "danger";
     statusText = "● 작업 중지";
@@ -50,7 +46,6 @@ function decideWorkMessage({temp, wind, rain1h, snow1h, pm25, next12}){
     extra.push("비산물 방지망·안전난간·비계 결속 상태 점검");
   }
 
-  // 호우
   const heavyRainNow  = rain1h >= 5;
   const heavyRainSoon = next12.maxRain >= 10 || next12.popMax >= 0.7;
   if(heavyRainNow || heavyRainSoon){
@@ -60,16 +55,12 @@ function decideWorkMessage({temp, wind, rain1h, snow1h, pm25, next12}){
     extra.push("굴착부·흙막이·절토면 배수 정비");
   }
 
-  // 폭설
-  const heavySnowNow  = snow1h >= 3;
-  const heavySnowSoon = next12.maxSnow >= 5;
-  if(heavySnowNow || heavySnowSoon){
+  if(snow1h >= 3 || next12.maxSnow >= 5){
     level = "danger";
     statusText = "● 작업 중지";
     mainMsg = "폭설/적설 우려. 제설 및 결빙 방지 후 작업, 고소·이동 작업은 중지 권고.";
   }
 
-  // 폭염/한파
   if(temp >= 33){
     if(level !== "danger"){ level = "caution-status"; statusText = "● 부분 통제"; }
     mainMsg = "폭염 주의. 1시간 작업 후 10분 휴식, 수분·염분 보급 및 그늘 휴식 필수.";
@@ -81,7 +72,6 @@ function decideWorkMessage({temp, wind, rain1h, snow1h, pm25, next12}){
     extra.push("작업로 제설/염화칼슘, 결빙구간 표지");
   }
 
-  // 미세먼지(PM2.5)
   if(typeof pm25 === "number" && pm25 >= 75){
     if(level !== "danger"){ level = "caution-status"; statusText = "● 부분 통제"; }
     extra.push("미세먼지 높음: 절단/연마 등 분진 작업 시 방진마스크·살수 강화");
@@ -102,21 +92,17 @@ async function loadSiteWeatherAndMent(lat, lon){
   const [curRes, fcRes, aqRes] = await Promise.all([fetch(curUrl), fetch(fcUrl), fetch(aqUrl)]);
   const [cur, fc, aq] = await Promise.all([curRes.json(), fcRes.json(), aqRes.json().catch(()=>null)]);
 
-  const temp = cur?.main?.temp ?? 0;
-  const wind = cur?.wind?.speed ?? 0;
+  const temp     = cur?.main?.temp ?? 0;
+  const wind     = cur?.wind?.speed ?? 0;
   const humidity = cur?.main?.humidity ?? 0;
-  const desc = cur?.weather?.[0]?.description ?? "-";
+  const desc     = cur?.weather?.[0]?.description ?? "-";
+  const icon     = cur?.weather?.[0]?.icon || "01d";
+  const rain1h   = cur?.rain?.["1h"] ?? 0;
+  const snow1h   = cur?.snow?.["1h"] ?? 0;
+  const pm25     = aq?.list?.[0]?.components?.pm2_5;
+  const pm10     = aq?.list?.[0]?.components?.pm10;
 
-  // ✅ 이게 없어서 지도 아이콘이 깨졌던 겁니다.
-  const icon = cur?.weather?.[0]?.icon || "01d";
-
-  const rain1h = cur?.rain?.["1h"] ?? 0;
-  const snow1h = cur?.snow?.["1h"] ?? 0;
-
-  const pm25 = aq?.list?.[0]?.components?.pm2_5;
-  const pm10 = aq?.list?.[0]?.components?.pm10;
-
-  const next12 = summarizeNext12h(fc);
+  const next12   = summarizeNext12h(fc);
   const decision = decideWorkMessage({ temp, wind, rain1h, snow1h, pm25, next12 });
 
   const result = {

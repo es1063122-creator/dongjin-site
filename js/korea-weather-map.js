@@ -1,5 +1,7 @@
 // js/korea-weather-map.js
-// Leaflet 실제 지도: 날씨 그림(아이콘) + 온도 + 도시명 표시 (고급 divIcon)
+// Leaflet 실제 지도 + 날씨 아이콘 마커 + 클릭 시 하단 예보패널(시간별/주간/그래프) 표시
+
+const OWM_API_KEY_FOR_FORECAST = "97c0b999cc307cf079c6106404536f9e";
 
 const KOREA_CITIES = [
   { name:"서울",   lat:37.5665, lon:126.9780, stnId:108 },
@@ -15,6 +17,7 @@ const KOREA_CITIES = [
 
 let mapInstance = null;
 let markers = [];
+let chartInstance = null;
 
 function levelColor(level){
   if(level === "danger") return "#ef4444";
@@ -27,7 +30,6 @@ function owmIconUrl(iconCode){
   return `https://openweathermap.org/img/wn/${code}@2x.png`;
 }
 
-// ✅ 마커 CSS를 JS에서 주입(대표님 style.css에 추가 안 해도 동작)
 function ensureMarkerStyle(){
   if(document.getElementById("dj-wxmk-style")) return;
   const s = document.createElement("style");
@@ -42,24 +44,14 @@ function ensureMarkerStyle(){
       backdrop-filter: blur(10px);
       transform: translateY(-8px);
     }
-    .dj-wxmk-icon{
-      width:46px;height:46px;
-      margin-top:-6px;
-      image-rendering:auto;
-    }
-    .dj-wxmk-temp{
-      font-weight:900;font-size:16px;line-height:1;margin-top:-4px;color:#111;
-    }
-    .dj-wxmk-name{
-      font-weight:900;font-size:12px;line-height:1;margin-top:6px;color:#1e3932;
-    }
-    .dj-wxmk:hover{ filter: brightness(1.02); }
+    .dj-wxmk-icon{width:46px;height:46px;margin-top:-6px}
+    .dj-wxmk-temp{font-weight:900;font-size:16px;line-height:1;margin-top:-4px;color:#111}
+    .dj-wxmk-name{font-weight:900;font-size:12px;line-height:1;margin-top:6px;color:#1e3932}
     .leaflet-popup-content{ margin:12px 14px; }
   `;
   document.head.appendChild(s);
 }
 
-// 기존 마커 제거
 function clearMarkers(){
   for(const m of markers){
     try{ mapInstance.removeLayer(m); }catch(_){}
@@ -67,10 +59,180 @@ function clearMarkers(){
   markers = [];
 }
 
+function setForecastHeader(name){
+  const title = document.getElementById("forecastTitle");
+  const sub   = document.getElementById("forecastSub");
+  if(title) title.innerText = `${name} 날씨 관제`;
+  if(sub)   sub.innerText = `시간별(24h) + 주간(5일) 예보`;
+  const up = document.getElementById("forecastUpdated");
+  if(up){
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mm = String(d.getMinutes()).padStart(2,"0");
+    up.innerText = `업데이트 ${hh}:${mm}`;
+  }
+}
+
+function renderHourly(data){
+  const box = document.getElementById("hourlyWeather");
+  if(!box) return;
+  box.innerHTML = "";
+
+  const list = (data?.list || []).slice(0, 8); // 24시간
+  for(const w of list){
+    const dt = new Date(w.dt * 1000);
+    const hh = String(dt.getHours()).padStart(2,"0");
+    const label = `${hh}시`;
+    const icon = `https://openweathermap.org/img/wn/${w.weather[0].icon}.png`;
+    const temp = Math.round(w.main.temp);
+    const pop = Math.round((w.pop ?? 0) * 100);
+
+    const div = document.createElement("div");
+    div.className = "hour-card";
+    div.innerHTML = `
+      <div style="font-weight:900">${label}</div>
+      <img src="${icon}" alt="">
+      <div style="font-weight:900">${temp}°</div>
+      <div class="muted" style="font-size:12px">${pop}%</div>
+    `;
+    box.appendChild(div);
+  }
+}
+
+function renderDaily(data){
+  const box = document.getElementById("dailyWeather");
+  if(!box) return;
+  box.innerHTML = "";
+
+  const days = {};
+  for(const w of (data?.list || [])){
+    const d = new Date(w.dt * 1000);
+    const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    if(!days[key]) days[key] = [];
+    days[key].push(w);
+  }
+
+  const entries = Object.entries(days).slice(0, 5);
+
+  for(const [_, arr] of entries){
+    // 하루 중 정오 근처(12시) 값 선택(없으면 가운데)
+    let pick = arr[Math.floor(arr.length/2)];
+    let bestDiff = 999;
+    for(const w of arr){
+      const h = new Date(w.dt * 1000).getHours();
+      const diff = Math.abs(h - 12);
+      if(diff < bestDiff){ bestDiff = diff; pick = w; }
+    }
+
+    const dayName = new Date(pick.dt * 1000).toLocaleDateString("ko-KR",{weekday:"short"});
+    const icon = `https://openweathermap.org/img/wn/${pick.weather[0].icon}.png`;
+    const desc = pick.weather[0].description;
+    const temp = Math.round(pick.main.temp);
+
+    const row = document.createElement("div");
+    row.className = "day-card";
+    row.innerHTML = `
+      <div class="day-left">
+        <img src="${icon}" alt="">
+        <div>
+          <div class="day-name">${dayName}</div>
+          <div class="day-desc">${desc}</div>
+        </div>
+      </div>
+      <div class="day-temp">${temp}°</div>
+    `;
+    box.appendChild(row);
+  }
+}
+
+function renderChart(data){
+  const canvas = document.getElementById("weatherChart");
+  if(!canvas) return;
+
+  const list = (data?.list || []).slice(0, 8);
+  const labels = list.map(w=>{
+    const h = String(new Date(w.dt*1000).getHours()).padStart(2,"0");
+    return `${h}시`;
+  });
+  const temps = list.map(w=> w.main.temp);
+
+  if(chartInstance){
+    chartInstance.destroy();
+    chartInstance = null;
+  }
+
+  chartInstance = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "기온(°C)",
+        data: temps,
+        tension: 0.35
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { callback: (v)=> `${v}°` } }
+      }
+    }
+  });
+}
+
+function setBriefBox(weather, alertText){
+  const status = document.getElementById("briefStatus");
+  const ment   = document.getElementById("briefMent");
+  const alert  = document.getElementById("briefAlert");
+
+  const level = weather?.decision?.level || "normal";
+  const color = levelColor(level);
+
+  if(status){
+    status.style.background = color;
+    status.innerText = weather?.decision?.statusText || "● 확인 필요";
+  }
+  if(ment){
+    ment.innerText = weather?.decision?.mainMsg || "날씨 정보를 확인 중입니다.";
+    ment.classList.remove("muted");
+  }
+  if(alert){
+    alert.innerText = `📣 특보: ${alertText || "특보 없음"}`;
+    alert.classList.remove("muted");
+  }
+}
+
+async function loadForecastAndRender(lat, lon, name, stnId){
+  setForecastHeader(name);
+
+  // 1) 상세예보(5일/3시간) = 시간별/주간/그래프에 사용
+  const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${OWM_API_KEY_FOR_FORECAST}&units=metric&lang=kr`;
+  const res = await fetch(url);
+  const data = await res.json();
+
+  renderHourly(data);
+  renderDaily(data);
+  renderChart(data);
+
+  // 2) 작업판단(현재날씨 기반)
+  const weather = await loadSiteWeatherAndMent(lat, lon);
+
+  // 3) 특보
+  const a = await fetchKmaAlertSummary(stnId);
+  const alertText = a?.text || "특보 없음";
+
+  setBriefBox(weather, alertText);
+
+  // 패널로 스크롤(원하면)
+  const panel = document.getElementById("forecastPanel");
+  if(panel){
+    panel.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+}
+
 async function initRealKoreaMap(){
   ensureMarkerStyle();
 
-  // 지도 재생성(새로고침 버튼 대응)
   if(mapInstance){
     mapInstance.remove();
     mapInstance = null;
@@ -84,7 +246,6 @@ async function initRealKoreaMap(){
 
   clearMarkers();
 
-  // 병렬 로딩
   const results = await Promise.all(
     KOREA_CITIES.map(async (c)=>{
       try{
@@ -100,21 +261,18 @@ async function initRealKoreaMap(){
   for(const r of results){
     const { c, w, alert } = r;
 
-    // 날씨 못가져오면 기본값
     const temp = w?.current?.temp ?? 0;
     const desc = w?.current?.desc ?? "정보 없음";
     const iconCode = w?.current?.icon || "01d";
     const wind = w?.current?.wind ?? "-";
     const humidity = w?.current?.humidity ?? "-";
-    const level = w?.decision?.level || "caution-status";
+
+    const level = w?.decision?.level || "normal";
     const border = levelColor(level);
 
-    const iconUrl = owmIconUrl(iconCode);
-
-    // ✅ 핵심: divIcon으로 “그림+온도+도시” 표시
     const html = `
       <div class="dj-wxmk" style="border-color:${border}">
-        <img class="dj-wxmk-icon" src="${iconUrl}"
+        <img class="dj-wxmk-icon" src="${owmIconUrl(iconCode)}"
              onerror="this.onerror=null;this.src='https://openweathermap.org/img/wn/01d@2x.png';" />
         <div class="dj-wxmk-temp">${Math.round(temp)}°</div>
         <div class="dj-wxmk-name">${c.name}</div>
@@ -125,7 +283,7 @@ async function initRealKoreaMap(){
       className: "",
       html,
       iconSize: [86, 86],
-      iconAnchor: [43, 86],   // 아래쪽 기준으로 찍히게
+      iconAnchor: [43, 86],
       popupAnchor: [0, -86]
     });
 
@@ -137,17 +295,24 @@ async function initRealKoreaMap(){
     marker.bindPopup(`
       <div style="font-family:'Noto Sans KR';font-size:14px;">
         <b>${c.name}</b><br><br>
-        🌡 ${temp}°C · ☁ ${desc}<br>
+        🌡 ${Math.round(temp)}°C · ☁ ${desc}<br>
         💨 ${wind} m/s · 💧 ${humidity}%<br><br>
         <b>${statusText}</b><br>
         ${mainMsg}<br><br>
-        📣 ${alert || "특보 없음"}
+        📣 ${alert || "특보 없음"}<br>
+        <span class="muted" style="font-size:12px;">(마커 클릭 시 하단 상세예보 표시)</span>
       </div>
     `);
 
+    marker.on("click", ()=>{
+      loadForecastAndRender(c.lat, c.lon, c.name, c.stnId);
+    });
+
     markers.push(marker);
   }
+
+  // 기본 선택(서울 자동 표시) - 원치 않으면 이 줄 삭제
+  loadForecastAndRender(KOREA_CITIES[0].lat, KOREA_CITIES[0].lon, KOREA_CITIES[0].name, KOREA_CITIES[0].stnId);
 }
 
-// 전역 등록 (index.html의 버튼/초기호출에서 사용)
 window.initRealKoreaMap = initRealKoreaMap;
