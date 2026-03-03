@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>동진토건 현장</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<script src="js/sites.js"></script>
+<script src="js/weather.js"></script>
+<script src="js/kma-alert.js"></script>
+</head>
+
+<body>
+<header class="top">
+  <div class="subtitle" id="siteTitle">현장</div>
+  <div id="siteStatus" class="status normal">● 작업 가능</div>
+</header>
+
+<main class="container">
+
+<section class="card">
+  <h2>📍 현장정보</h2>
+  <div id="addr" class="muted"></div>
+  <ul id="infoBox" class="info"></ul>
+</section>
+
+<section class="card">
+  <h2>🌤 현재 날씨</h2>
+  <div id="weatherBox">불러오는 중...</div>
+</section>
+
+<section class="card warning">
+  <h2>🧠 오늘 작업 멘트</h2>
+  <div id="todayMent">판단 중...</div>
+  <ul id="mentExtra" class="bul"></ul>
+</section>
+
+<section class="card caution">
+  <h2>📣 기상청 특보</h2>
+  <div id="kmaAlert">불러오는 중...</div>
+</section>
+
+<section class="card">
+  <h2>⏭ 향후 12시간 요약</h2>
+  <div id="forecast12">불러오는 중...</div>
+</section>
+
+</main>
+
+<script>
+(async ()=>{
+  const params = new URLSearchParams(location.search);
+  const key = params.get("site");
+  const site = sites[key];
+  if(!site){ document.body.innerHTML="현장 정보 없음"; return; }
+
+  document.getElementById("siteTitle").innerText = site.name;
+  document.getElementById("addr").innerText = site.address || "";
+
+  const infoBox = document.getElementById("infoBox");
+  infoBox.innerHTML = "";
+  Object.entries(site.info || {}).forEach(([k,v])=>{
+    const li = document.createElement("li");
+    li.textContent = `${k} : ${v}`;
+    infoBox.appendChild(li);
+  });
+
+  // 1) OpenWeather 기반 판단
+  const w = await loadSiteWeatherAndMent(site.lat, site.lon);
+
+  document.getElementById("weatherBox").innerHTML = `
+    🌡 기온: ${w.current.temp}°C<br>
+    💨 풍속: ${w.current.wind} m/s<br>
+    💧 습도: ${w.current.humidity}%<br>
+    ☁ 상태: ${w.current.desc}<br>
+    🌫 PM2.5: ${w.current.pm25 ?? "-"} / PM10: ${w.current.pm10 ?? "-"}
+  `;
+
+  document.getElementById("todayMent").innerHTML = w.decision.mainMsg;
+
+  const extraUl = document.getElementById("mentExtra");
+  extraUl.innerHTML = "";
+  (w.decision.extra || []).forEach(t=>{
+    const li=document.createElement("li");
+    li.textContent=t;
+    extraUl.appendChild(li);
+  });
+
+  const status = document.getElementById("siteStatus");
+  status.className = "status " + w.decision.level;
+  status.innerText = w.decision.statusText;
+
+  document.getElementById("forecast12").innerHTML = `
+    ☔ 강수(3시간 최대): ${w.next12.maxRain}mm / 확률최대: ${(w.next12.popMax*100).toFixed(0)}%<br>
+    🌨 적설(3시간 최대): ${w.next12.maxSnow}mm<br>
+    💨 풍속 최대: ${w.next12.maxWind} m/s
+  `;
+
+  // 2) 기상청 특보
+  const alert = await fetchKmaAlertSummary(site.stnId);
+  document.getElementById("kmaAlert").innerText = alert.text;
+
+})();
+</script>
+</body>
+</html>

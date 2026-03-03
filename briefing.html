@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모바일 안전 브리핑</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/sites.js"></script>
+<script src="js/weather.js"></script>
+<script src="js/kma-alert.js"></script>
+</head>
+<body>
+
+<header class="top">
+  <div class="subtitle" id="t">모바일 안전 브리핑</div>
+  <div id="st" class="status normal">● 작업 가능</div>
+</header>
+
+<main class="container">
+  <section class="card">
+    <h2>🧠 오늘 한줄 브리핑</h2>
+    <div id="m" style="font-size:18px; font-weight:800;">불러오는 중...</div>
+    <div class="muted" id="addr" style="margin-top:10px;"></div>
+  </section>
+
+  <section class="card">
+    <h2>🌤 핵심 수치</h2>
+    <div id="k">불러오는 중...</div>
+  </section>
+
+  <section class="card caution">
+    <h2>📣 기상청 특보</h2>
+    <div id="a">불러오는 중...</div>
+  </section>
+
+  <section class="card">
+    <h2>⏭ 향후 12시간 요약</h2>
+    <div id="f">불러오는 중...</div>
+  </section>
+</main>
+
+<script>
+(async ()=>{
+  const params = new URLSearchParams(location.search);
+  const key = params.get("site") || "ulsan-woojung";
+  const site = sites[key];
+  if(!site){ document.body.innerHTML="현장 정보 없음"; return; }
+
+  document.getElementById("t").innerText = site.name + " · 브리핑";
+  document.getElementById("addr").innerText = site.address || "";
+
+  const w = await loadSiteWeatherAndMent(site.lat, site.lon);
+  document.getElementById("m").innerText = w.decision.mainMsg;
+
+  const st = document.getElementById("st");
+  st.className = "status " + w.decision.level;
+  st.innerText = w.decision.statusText;
+
+  document.getElementById("k").innerHTML = `
+    🌡 ${w.current.temp}°C / 💨 ${w.current.wind} m/s / 💧 ${w.current.humidity}%<br>
+    🌫 PM2.5 ${w.current.pm25 ?? "-"} · PM10 ${w.current.pm10 ?? "-"}<br>
+    ☁ ${w.current.desc}
+  `;
+
+  document.getElementById("f").innerHTML = `
+    ☔ 강수(3시간 최대): ${w.next12.maxRain}mm / 확률최대: ${(w.next12.popMax*100).toFixed(0)}%<br>
+    🌨 적설(3시간 최대): ${w.next12.maxSnow}mm<br>
+    💨 풍속 최대: ${w.next12.maxWind} m/s
+  `;
+
+  const alert = await fetchKmaAlertSummary(site.stnId);
+  document.getElementById("a").innerText = alert.text;
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>울산 우정동 현장 | 동진토건</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/style.css">
+<script src="../js/weather.js"></script>
+<script src="../js/risk.js"></script>
+</head>
+
+<body>
+
+<header>
+  울산 우정동 현장
+  <div id="siteStatus" class="status normal">● 정상</div>
+</header>
+
+<main class="container">
+
+<section class="card">
+<h2>📌 기본정보</h2>
+<ul class="info">
+<li>공사금액 : 120억</li>
+<li>공사기간 : 2025.03 ~ 2026.08</li>
+<li>공정율 : 42%</li>
+<li>원도급사 : 동진토건</li>
+<li>현장소장 : 홍길동</li>
+<li>안전관리자 : 김대홍</li>
+<li>근로자수 : 38명</li>
+<li>무재해 : 132일</li>
+</ul>
+</section>
+
+<section class="card">
+<h2>🌤 오늘의 기상정보</h2>
+<div id="weatherBox">불러오는 중...</div>
+</section>
+
+<section class="card">
+<h2>⚠ 위험요인 TOP5</h2>
+<ul id="riskList"></ul>
+</section>
+
+<section class="card warning">
+<h2>🚫 금지 작업</h2>
+<div id="forbiddenWork">판단 중...</div>
+</section>
+
+<section class="card caution">
+<h2>🔎 작업 중 주의사항</h2>
+<div id="cautionWork">판단 중...</div>
+</section>
+
+</main>
+
+<script>
+const LAT = 35.5573;
+const LON = 129.3301;
+
+loadWeather(LAT, LON);
+loadAirQuality(LAT, LON);
+loadRisk("ulsan-woojung");
+</script>
+
+</body>
+</html>
