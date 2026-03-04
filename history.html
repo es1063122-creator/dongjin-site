@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>지난 날씨 보기 · 동진토건</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/history.css">
+<script src="js/sites.js"></script>
+</head>
+<body class="hist-body">
+
+<!-- 헤더 -->
+<header class="top top-glass">
+  <div class="top-left">
+    <div class="logo-wrap">
+      <div class="logo">DONGJIN CONSTRUCTION</div>
+      <div class="logo-sub">KDH-safety</div>
+    </div>
+    <div class="subtitle">지난 날씨 조회</div>
+    <div class="top-chips">
+      <a class="chip" href="index.html">← 홈</a>
+      <a class="chip" href="dashboard.html">통합 관제</a>
+    </div>
+  </div>
+</header>
+
+<main class="hist-wrap">
+
+  <!-- 검색 컨트롤 -->
+  <section class="hist-control">
+    <div class="hist-control-inner">
+
+      <div class="ctrl-group">
+        <label class="ctrl-label">📍 지역 선택</label>
+        <select id="locationSelect" class="ctrl-select">
+          <optgroup label="— 현장 —">
+            <!-- JS에서 동적 생성 -->
+          </optgroup>
+          <optgroup label="— 주요 도시 —">
+            <option value="37.5665,126.9780,서울">서울</option>
+            <option value="35.1796,129.0756,부산">부산</option>
+            <option value="35.8714,128.6014,대구">대구</option>
+            <option value="35.5384,129.3114,울산">울산</option>
+            <option value="36.3504,127.3845,대전">대전</option>
+            <option value="37.4563,126.7052,인천">인천</option>
+            <option value="35.1595,126.8526,광주">광주</option>
+            <option value="33.4996,126.5312,제주">제주</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="ctrl-group">
+        <label class="ctrl-label">📅 연도/월 선택</label>
+        <div class="ctrl-month-nav">
+          <button class="ctrl-nav-btn" id="prevMonth">‹</button>
+          <span class="ctrl-month-label" id="monthLabel">2026년 3월</span>
+          <button class="ctrl-nav-btn" id="nextMonth">›</button>
+        </div>
+      </div>
+
+      <button class="ctrl-search-btn" id="searchBtn">
+        <span id="searchBtnText">🔍 날씨 불러오기</span>
+      </button>
+
+    </div>
+  </section>
+
+  <!-- 범례 -->
+  <section class="hist-legend">
+    <div class="leg-item"><span class="leg-icon">☀️</span> 맑음</div>
+    <div class="leg-item"><span class="leg-icon">⛅</span> 구름조금</div>
+    <div class="leg-item"><span class="leg-icon">☁️</span> 흐림</div>
+    <div class="leg-item"><span class="leg-icon">🌧</span> 비</div>
+    <div class="leg-item"><span class="leg-icon">⛈</span> 뇌우</div>
+    <div class="leg-item"><span class="leg-icon">🌨</span> 눈</div>
+    <div class="leg-sep"></div>
+    <div class="leg-item"><span class="leg-rain-bar" style="background:#bfdbfe"></span> 약한비 &lt;5mm</div>
+    <div class="leg-item"><span class="leg-rain-bar" style="background:#3b82f6"></span> 보통비 5~20mm</div>
+    <div class="leg-item"><span class="leg-rain-bar" style="background:#1d4ed8"></span> 강한비 &gt;20mm</div>
+  </section>
+
+  <!-- 달력 -->
+  <section class="hist-calendar-wrap" id="calendarWrap">
+    <div class="hist-placeholder" id="placeholder">
+      <div class="placeholder-icon">🗓</div>
+      <div>지역과 월을 선택한 뒤 <b>날씨 불러오기</b>를 눌러주세요.</div>
+    </div>
+    <div id="calendarGrid" class="hist-calendar" style="display:none;"></div>
+  </section>
+
+  <!-- 상세 모달 -->
+  <div class="hist-modal-backdrop" id="modalBackdrop" onclick="closeModal()"></div>
+  <div class="hist-modal" id="detailModal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+
+</main>
+
+<script>
+// =============================================
+// 지역 select 옵션 동적 생성 (sites.js 활용)
+// =============================================
+(function(){
+  const sel = document.getElementById("locationSelect");
+  const og = sel.querySelector("optgroup");
+  for(const [key, s] of Object.entries(sites)){
+    const opt = document.createElement("option");
+    opt.value = `${s.lat},${s.lon},${s.name}`;
+    opt.textContent = s.name;
+    og.appendChild(opt);
+  }
+  // 기본 선택: 서울
+  sel.value = "37.5665,126.9780,서울";
+})();
+
+// =============================================
+// 현재 연/월 상태
+// =============================================
+const today = new Date();
+let curYear  = today.getFullYear();
+let curMonth = today.getMonth() + 1; // 1~12
+
+function updateMonthLabel(){
+  document.getElementById("monthLabel").textContent = `${curYear}년 ${curMonth}월`;
+}
+updateMonthLabel();
+
+document.getElementById("prevMonth").onclick = () => {
+  curMonth--;
+  if(curMonth < 1){ curMonth = 12; curYear--; }
+  updateMonthLabel();
+};
+document.getElementById("nextMonth").onclick = () => {
+  const now = new Date();
+  // 미래 월은 이동 불가
+  if(curYear > now.getFullYear() || (curYear === now.getFullYear() && curMonth >= now.getMonth()+1)) return;
+  curMonth++;
+  if(curMonth > 12){ curMonth = 1; curYear++; }
+  updateMonthLabel();
+};
+
+// =============================================
+// Open-Meteo 과거 날씨 API 호출
+// =============================================
+async function fetchMonthWeather(lat, lon, year, month){
+  const pad = n => String(n).padStart(2,"0");
+  const startDate = `${year}-${pad(month)}-01`;
+  const lastDay   = new Date(year, month, 0).getDate();
+  const endDate   = `${year}-${pad(month)}-${pad(lastDay)}`;
+
+  const url = `https://archive-api.open-meteo.com/v1/archive`
+    + `?latitude=${lat}&longitude=${lon}`
+    + `&start_date=${startDate}&end_date=${endDate}`
+    + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max`
+    + `&hourly=precipitation,weathercode`
+    + `&timezone=Asia%2FSeoul`;
+
+  const res = await fetch(url);
+  if(!res.ok) throw new Error("API 오류: " + res.status);
+  return res.json();
+}
+
+// WMO 날씨코드 → 이모지+설명
+function wmoToEmoji(code){
+  if(code == null) return { emoji:"❓", desc:"정보없음" };
+  if(code === 0)             return { emoji:"☀️",  desc:"맑음" };
+  if(code <= 2)              return { emoji:"⛅",  desc:"구름조금" };
+  if(code === 3)             return { emoji:"☁️",  desc:"흐림" };
+  if(code >= 45 && code<=49) return { emoji:"🌫",  desc:"안개" };
+  if(code >= 51 && code<=59) return { emoji:"🌦",  desc:"이슬비" };
+  if(code >= 61 && code<=65) return { emoji:"🌧",  desc:"비" };
+  if(code >= 66 && code<=67) return { emoji:"🌨",  desc:"진눈깨비" };
+  if(code >= 71 && code<=77) return { emoji:"❄️",  desc:"눈" };
+  if(code >= 80 && code<=82) return { emoji:"🌧",  desc:"소나기" };
+  if(code >= 85 && code<=86) return { emoji:"🌨",  desc:"눈소나기" };
+  if(code >= 95)             return { emoji:"⛈",  desc:"뇌우" };
+  return { emoji:"🌡", desc:"기타" };
+}
+
+// 강수량 → 색상
+function rainColor(mm){
+  if(!mm || mm < 0.5) return null;
+  if(mm <  5)  return { bg:"#dbeafe", text:"#1d4ed8", label:"약" };
+  if(mm < 20)  return { bg:"#3b82f6", text:"#fff",    label:"보통" };
+               return { bg:"#1d4ed8", text:"#fff",    label:"강" };
+}
+
+// =============================================
+// 달력 렌더링
+// =============================================
+function renderCalendar(data, year, month, locationName){
+  const grid = document.getElementById("calendarGrid");
+  grid.innerHTML = "";
+  grid.style.display = "";
+  document.getElementById("placeholder").style.display = "none";
+
+  const daily   = data.daily;
+  const hourly  = data.hourly;
+  const dates   = daily.time; // ["2026-03-01", ...]
+
+  // 요일 헤더
+  const days = ["일","월","화","수","목","금","토"];
+  for(const d of days){
+    const h = document.createElement("div");
+    h.className = "cal-header";
+    h.textContent = d;
+    grid.appendChild(h);
+  }
+
+  // 첫날 요일 빈 칸
+  const firstDow = new Date(year, month-1, 1).getDay();
+  for(let i=0; i<firstDow; i++){
+    const blank = document.createElement("div");
+    blank.className = "cal-cell cal-blank";
+    grid.appendChild(blank);
+  }
+
+  // 날짜 셀
+  for(let i=0; i<dates.length; i++){
+    const dateStr  = dates[i];
+    const code     = daily.weathercode[i];
+    const tMax     = daily.temperature_2m_max[i];
+    const tMin     = daily.temperature_2m_min[i];
+    const rain     = daily.precipitation_sum[i] || 0;
+    const windMax  = daily.windspeed_10m_max[i] || 0;
+    const wx       = wmoToEmoji(code);
+    const rc       = rainColor(rain);
+    const dayNum   = new Date(dateStr).getDate();
+    const dow      = new Date(dateStr).getDay();
+
+    // 시간별 강수 인덱스 추출 (해당 날짜)
+    const hourlyRain = [];
+    if(hourly){
+      for(let h=0; h<hourly.time.length; h++){
+        if(hourly.time[h].startsWith(dateStr)){
+          hourlyRain.push({ hour: parseInt(hourly.time[h].slice(11,13)), mm: hourly.precipitation[h]||0, code: hourly.weathercode[h] });
+        }
+      }
+    }
+
+    const cell = document.createElement("div");
+    cell.className = "cal-cell" + (dow===0?" cal-sun":"") + (dow===6?" cal-sat":"");
+    if(rc) cell.style.setProperty("--rain-bg", rc.bg);
+
+    // 강수 있는 날: 비 오는 시간대 요약
+    let rainTimeHtml = "";
+    if(rain >= 0.5){
+      const wetHours = hourlyRain.filter(h => h.mm >= 0.1);
+      if(wetHours.length){
+        const firstH = wetHours[0].hour;
+        const lastH  = wetHours[wetHours.length-1].hour;
+        rainTimeHtml = `<div class="cal-rain-time">${pad2(firstH)}~${pad2(lastH+1)}시</div>`;
+      }
+      rainTimeHtml += `<div class="cal-rain-mm" style="background:${rc?.bg};color:${rc?.text}">${rain.toFixed(1)}mm</div>`;
+    }
+
+    cell.innerHTML = `
+      <div class="cal-top">
+        <span class="cal-day">${dayNum}</span>
+        <span class="cal-emoji">${wx.emoji}</span>
+      </div>
+      <div class="cal-temps">
+        <span class="cal-tmax">${Math.round(tMax)}°</span>
+        <span class="cal-tmin">${Math.round(tMin)}°</span>
+      </div>
+      ${rainTimeHtml}
+    `;
+
+    cell.onclick = () => openModal(dateStr, wx, tMax, tMin, rain, windMax, hourlyRain, locationName);
+    grid.appendChild(cell);
+  }
+}
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+// =============================================
+// 상세 모달
+// =============================================
+function openModal(dateStr, wx, tMax, tMin, rain, windMax, hourlyRain, locationName){
+  const d = new Date(dateStr);
+  const dayNames = ["일","월","화","수","목","금","토"];
+  const title = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${dayNames[d.getDay()]})`;
+
+  // 시간별 강수 차트 데이터
+  const hasRain = rain >= 0.5;
+  let hourlyHtml = "";
+  if(hasRain && hourlyRain.length){
+    const bars = hourlyRain.map(h => {
+      const pct = Math.min(100, (h.mm / 10) * 100);
+      const col = h.mm < 0.1 ? "#e5e7eb" : h.mm < 2 ? "#93c5fd" : h.mm < 5 ? "#3b82f6" : "#1d4ed8";
+      return `
+        <div class="modal-bar-wrap" title="${pad2(h.hour)}시 ${h.mm.toFixed(1)}mm">
+          <div class="modal-bar" style="height:${Math.max(2,pct)}%;background:${col}"></div>
+          <div class="modal-bar-label">${pad2(h.hour)}</div>
+        </div>`;
+    }).join("");
+
+    // 비 오는 구간 요약
+    const wetH = hourlyRain.filter(h=>h.mm>=0.1);
+    let rainSummary = "강수 없음";
+    if(wetH.length){
+      // 연속 구간으로 묶기
+      const segments = [];
+      let seg = [wetH[0]];
+      for(let i=1; i<wetH.length; i++){
+        if(wetH[i].hour - wetH[i-1].hour <= 2){ seg.push(wetH[i]); }
+        else { segments.push(seg); seg = [wetH[i]]; }
+      }
+      segments.push(seg);
+      rainSummary = segments.map(s =>
+        `<b>${pad2(s[0].hour)}시~${pad2(s[s.length-1].hour+1)}시</b> (최대 ${Math.max(...s.map(h=>h.mm)).toFixed(1)}mm/h)`
+      ).join(", ");
+    }
+
+    hourlyHtml = `
+      <div class="modal-section">
+        <div class="modal-section-title">🌧 시간별 강수 (24시간)</div>
+        <div class="modal-rain-summary">☔ 강수 구간: ${rainSummary}</div>
+        <div class="modal-bar-chart">${bars}</div>
+      </div>`;
+  }
+
+  // 날씨 요약 카드들
+  const rc = rainColor(rain);
+  document.getElementById("modalContent").innerHTML = `
+    <div class="modal-title">${title}</div>
+    <div class="modal-location">📍 ${locationName}</div>
+
+    <div class="modal-cards">
+      <div class="modal-card">
+        <div class="modal-card-icon">${wx.emoji}</div>
+        <div class="modal-card-label">날씨</div>
+        <div class="modal-card-val">${wx.desc}</div>
+      </div>
+      <div class="modal-card">
+        <div class="modal-card-icon">🌡</div>
+        <div class="modal-card-label">최고/최저</div>
+        <div class="modal-card-val"><span style="color:#ef4444">${Math.round(tMax)}°</span> / <span style="color:#3b82f6">${Math.round(tMin)}°</span></div>
+      </div>
+      <div class="modal-card">
+        <div class="modal-card-icon">☔</div>
+        <div class="modal-card-label">일 강수량</div>
+        <div class="modal-card-val" style="color:${rc?.text||'#111'};background:${rc?.bg||'transparent'};border-radius:8px;padding:2px 8px;">
+          ${rain >= 0.5 ? rain.toFixed(1)+'mm' : '없음'}
+        </div>
+      </div>
+      <div class="modal-card">
+        <div class="modal-card-icon">💨</div>
+        <div class="modal-card-label">최대풍속</div>
+        <div class="modal-card-val">${windMax.toFixed(1)} m/s</div>
+      </div>
+    </div>
+
+    ${hourlyHtml}
+  `;
+
+  document.getElementById("modalBackdrop").classList.add("show");
+  document.getElementById("detailModal").classList.add("show");
+}
+
+function closeModal(){
+  document.getElementById("modalBackdrop").classList.remove("show");
+  document.getElementById("detailModal").classList.remove("show");
+}
+
+// =============================================
+// 검색 버튼
+// =============================================
+document.getElementById("searchBtn").onclick = async () => {
+  const val = document.getElementById("locationSelect").value;
+  if(!val) return;
+  const [lat, lon, name] = val.split(",");
+
+  const btn = document.getElementById("searchBtn");
+  const btnText = document.getElementById("searchBtnText");
+  btn.disabled = true;
+  btnText.textContent = "⏳ 불러오는 중...";
+
+  try {
+    const data = await fetchMonthWeather(parseFloat(lat), parseFloat(lon), curYear, curMonth);
+    renderCalendar(data, curYear, curMonth, name);
+  } catch(e) {
+    alert("날씨 데이터를 불러오지 못했습니다.\n" + e.message);
+  } finally {
+    btn.disabled = false;
+    btnText.textContent = "🔍 날씨 불러오기";
+  }
+};
+</script>
+
+</body>
+</html>

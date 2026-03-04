@@ -1,0 +1,431 @@
+/* =====================================================
+   history.css — 지난 날씨 달력 전용 스타일
+   ===================================================== */
+
+.hist-body { background: #f0f2f5; }
+
+/* ===== 전체 레이아웃 ===== */
+.hist-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ===== 검색 컨트롤 ===== */
+.hist-control {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+
+.hist-control-inner {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.ctrl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.ctrl-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #666;
+  letter-spacing: .03em;
+}
+
+.ctrl-select {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #e5e7eb;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  background: #f8f9fa;
+  color: #111;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+.ctrl-select:focus { border-color: #2d6a4f; }
+
+.ctrl-month-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1.5px solid #e5e7eb;
+  padding: 8px 14px;
+}
+
+.ctrl-nav-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #1e3932;
+  font-weight: 800;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color .15s;
+}
+.ctrl-nav-btn:hover { color: #40916c; }
+
+.ctrl-month-label {
+  font-size: 15px;
+  font-weight: 800;
+  color: #111;
+  min-width: 100px;
+  text-align: center;
+}
+
+.ctrl-search-btn {
+  padding: 11px 28px;
+  background: #1e3932;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ctrl-search-btn:hover  { background: #2d6a4f; transform: translateY(-1px); }
+.ctrl-search-btn:disabled { background: #aaa; cursor: not-allowed; transform: none; }
+
+/* ===== 범례 ===== */
+.hist-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.05);
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.leg-icon { font-size: 16px; }
+
+.leg-rain-bar {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.leg-sep {
+  width: 1px;
+  height: 18px;
+  background: #e5e7eb;
+}
+
+/* ===== 달력 ===== */
+.hist-calendar-wrap {
+  background: #fff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+  min-height: 300px;
+}
+
+.hist-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 260px;
+  color: #aaa;
+  font-size: 15px;
+}
+
+.placeholder-icon { font-size: 48px; }
+
+/* 달력 그리드 */
+.hist-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+/* 요일 헤더 */
+.cal-header {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #888;
+  padding: 6px 0;
+  letter-spacing: .05em;
+}
+
+/* 날짜 셀 */
+.cal-cell {
+  border-radius: 14px;
+  padding: 10px 8px 8px;
+  border: 1.5px solid #f0f2f5;
+  background: #fafafa;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+}
+
+.cal-cell:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,.1);
+  border-color: #2d6a4f;
+  z-index: 2;
+}
+
+/* 강수 있는 날: 좌측 컬러 바 */
+.cal-cell:has(.cal-rain-mm) {
+  border-left: 4px solid var(--rain-bg, #3b82f6);
+  background: color-mix(in srgb, var(--rain-bg, #dbeafe) 15%, #fff);
+}
+
+.cal-blank { background: transparent; border-color: transparent; cursor: default; }
+.cal-blank:hover { transform: none; box-shadow: none; border-color: transparent; }
+
+.cal-sun .cal-day { color: #ef4444; }
+.cal-sat .cal-day { color: #3b82f6; }
+
+/* 셀 내부 */
+.cal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cal-day {
+  font-size: 15px;
+  font-weight: 900;
+  color: #111;
+  line-height: 1;
+}
+
+.cal-emoji { font-size: 20px; line-height: 1; }
+
+.cal-temps {
+  display: flex;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cal-tmax { color: #ef4444; }
+.cal-tmin { color: #3b82f6; }
+
+.cal-rain-time {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border-radius: 5px;
+  padding: 2px 5px;
+  width: fit-content;
+}
+
+.cal-rain-mm {
+  font-size: 11px;
+  font-weight: 900;
+  border-radius: 6px;
+  padding: 2px 6px;
+  width: fit-content;
+}
+
+/* ===== 모달 ===== */
+.hist-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+.hist-modal-backdrop.show { opacity: 1; pointer-events: all; }
+
+.hist-modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -48%) scale(.96);
+  z-index: 1001;
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 28px 24px;
+  width: min(520px, 94vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s, transform .22s;
+}
+.hist-modal.show {
+  opacity: 1;
+  pointer-events: all;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px; right: 18px;
+  background: #f0f2f5;
+  border: none;
+  border-radius: 50%;
+  width: 32px; height: 32px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800;
+  transition: background .15s;
+}
+.modal-close:hover { background: #e5e7eb; }
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #111;
+  margin-bottom: 4px;
+}
+
+.modal-location {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 18px;
+}
+
+/* 요약 카드 4개 */
+.modal-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.modal-card {
+  background: #f8f9fa;
+  border-radius: 14px;
+  padding: 12px 8px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.modal-card-icon { font-size: 22px; margin-bottom: 5px; }
+.modal-card-label { font-size: 10px; color: #888; font-weight: 700; margin-bottom: 4px; }
+.modal-card-val { font-size: 14px; font-weight: 900; }
+
+/* 시간별 강수 차트 */
+.modal-section {
+  border-top: 1px solid #f0f2f5;
+  padding-top: 16px;
+}
+
+.modal-section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1e3932;
+  margin-bottom: 8px;
+}
+
+.modal-rain-summary {
+  font-size: 12px;
+  color: #555;
+  background: #eff6ff;
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.modal-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+  padding-bottom: 20px;
+  position: relative;
+}
+
+.modal-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  position: relative;
+}
+
+.modal-bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: height .3s;
+}
+
+.modal-bar-label {
+  position: absolute;
+  bottom: -18px;
+  font-size: 9px;
+  color: #999;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 768px) {
+  .hist-control-inner { flex-direction: column; align-items: stretch; }
+  .ctrl-search-btn { width: 100%; text-align: center; }
+
+  .hist-calendar { gap: 4px; }
+  .cal-cell { min-height: 72px; padding: 7px 5px 5px; border-radius: 10px; }
+  .cal-emoji { font-size: 16px; }
+  .cal-day   { font-size: 13px; }
+  .cal-temps { font-size: 11px; }
+  .cal-rain-time { font-size: 9px; }
+  .cal-rain-mm   { font-size: 10px; }
+
+  .modal-cards { grid-template-columns: repeat(2, 1fr); }
+  .hist-modal  { padding: 22px 18px 18px; }
+}
+
+@media (max-width: 480px) {
+  .hist-calendar { gap: 3px; }
+  .cal-cell { min-height: 60px; padding: 5px 3px 3px; border-radius: 8px; }
+  .cal-emoji { font-size: 14px; }
+  .cal-day   { font-size: 11px; }
+  .cal-temps { font-size: 10px; gap: 2px; }
+  .cal-rain-time { display: none; } /* 너무 작아서 mm만 표시 */
+  .cal-rain-mm   { font-size: 9px; padding: 1px 4px; }
+
+  .hist-legend { gap: 10px; font-size: 11px; }
+}
