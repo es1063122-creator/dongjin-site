@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>전국 실시간 날씨 · 동진토건</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/realtime.css">
+<script src="js/weather.js"></script>
+<script src="js/kma-alert.js"></script>
+</head>
+<body class="rt-body">
+
+<header class="top top-glass">
+  <div class="top-left">
+    <div class="logo-wrap">
+      <div class="logo">DONGJIN CONSTRUCTION</div>
+      <div class="logo-sub">KDH-safety</div>
+    </div>
+    <div class="subtitle">전국 실시간 날씨</div>
+    <div class="top-chips">
+      <a class="chip" href="index.html">← 홈</a>
+      <a class="chip" href="dashboard.html">통합 관제</a>
+      <a class="chip" href="history.html">📅 지난 날씨</a>
+    </div>
+  </div>
+  <div class="top-right">
+    <div id="lastUpdated" class="rt-updated">--:-- 기준</div>
+  </div>
+</header>
+
+<main class="rt-wrap">
+
+  <!-- 지역 탭 -->
+  <section class="rt-tabs-section">
+    <div class="rt-tabs" id="regionTabs">
+      <button class="rt-tab active" data-region="all">전체</button>
+      <button class="rt-tab" data-region="수도권">수도권</button>
+      <button class="rt-tab" data-region="충청">충청</button>
+      <button class="rt-tab" data-region="전라">전라</button>
+      <button class="rt-tab" data-region="경상">경상</button>
+      <button class="rt-tab" data-region="강원">강원</button>
+      <button class="rt-tab" data-region="제주">제주</button>
+    </div>
+  </section>
+
+  <!-- 로딩 -->
+  <div class="rt-loading" id="rtLoading">
+    <div class="rt-spinner"></div>
+    <div>전국 날씨 불러오는 중...</div>
+  </div>
+
+  <!-- 카드 그리드 -->
+  <section class="rt-grid" id="rtGrid" style="display:none;"></section>
+
+  <!-- 상세 패널 (지역 클릭 시) -->
+  <section class="rt-detail-panel" id="detailPanel" style="display:none;">
+    <div class="rt-detail-inner" id="detailInner"></div>
+  </section>
+
+</main>
+
+<script>
+// =============================================
+// 전국 도시 데이터
+// =============================================
+const CITIES = [
+  // 수도권
+  { name:"서울",   region:"수도권", lat:37.5665, lon:126.9780, stnId:108 },
+  { name:"인천",   region:"수도권", lat:37.4563, lon:126.7052, stnId:108 },
+  { name:"수원",   region:"수도권", lat:37.2636, lon:127.0286, stnId:108 },
+  { name:"성남",   region:"수도권", lat:37.4196, lon:127.1267, stnId:108 },
+  { name:"고양",   region:"수도권", lat:37.6583, lon:126.8320, stnId:108 },
+  { name:"용인",   region:"수도권", lat:37.2410, lon:127.1775, stnId:108 },
+  { name:"파주",   region:"수도권", lat:37.7200, lon:126.7700, stnId:108 },
+  { name:"안산",   region:"수도권", lat:37.3236, lon:126.8219, stnId:108 },
+  // 충청
+  { name:"대전",   region:"충청",  lat:36.3504, lon:127.3845, stnId:133 },
+  { name:"세종",   region:"충청",  lat:36.4800, lon:127.2890, stnId:133 },
+  { name:"청주",   region:"충청",  lat:36.6424, lon:127.4890, stnId:131 },
+  { name:"천안",   region:"충청",  lat:36.8151, lon:127.1139, stnId:133 },
+  { name:"충주",   region:"충청",  lat:36.9910, lon:127.9259, stnId:131 },
+  // 전라
+  { name:"광주",   region:"전라",  lat:35.1595, lon:126.8526, stnId:156 },
+  { name:"전주",   region:"전라",  lat:35.8242, lon:127.1480, stnId:146 },
+  { name:"목포",   region:"전라",  lat:34.8118, lon:126.3922, stnId:165 },
+  { name:"여수",   region:"전라",  lat:34.7604, lon:127.6622, stnId:168 },
+  { name:"순천",   region:"전라",  lat:34.9506, lon:127.4873, stnId:168 },
+  // 경상
+  { name:"부산",   region:"경상",  lat:35.1796, lon:129.0756, stnId:159 },
+  { name:"대구",   region:"경상",  lat:35.8714, lon:128.6014, stnId:143 },
+  { name:"울산",   region:"경상",  lat:35.5384, lon:129.3114, stnId:152 },
+  { name:"창원",   region:"경상",  lat:35.2280, lon:128.6811, stnId:155 },
+  { name:"김해",   region:"경상",  lat:35.2345, lon:128.8000, stnId:159 },
+  { name:"포항",   region:"경상",  lat:36.0190, lon:129.3435, stnId:138 },
+  { name:"경주",   region:"경상",  lat:35.8562, lon:129.2247, stnId:143 },
+  { name:"안동",   region:"경상",  lat:36.5684, lon:128.7294, stnId:136 },
+  // 강원
+  { name:"춘천",   region:"강원",  lat:37.8813, lon:127.7298, stnId:101 },
+  { name:"강릉",   region:"강원",  lat:37.7519, lon:128.8760, stnId:105 },
+  { name:"원주",   region:"강원",  lat:37.3422, lon:127.9202, stnId:114 },
+  { name:"속초",   region:"강원",  lat:38.2048, lon:128.5912, stnId:105 },
+  // 제주
+  { name:"제주",   region:"제주",  lat:33.4996, lon:126.5312, stnId:184 },
+  { name:"서귀포", region:"제주",  lat:33.2541, lon:126.5600, stnId:189 },
+];
+
+let allData   = [];   // 로드된 전체 데이터
+let activeReg = "all";
+let selectedCity = null;
+
+// =============================================
+// 날씨 이모지
+// =============================================
+function wxEmoji(iconCode){
+  const c = iconCode || "01d";
+  if(c.startsWith("01")) return "☀️";
+  if(c.startsWith("02")) return "🌤";
+  if(c.startsWith("03")) return "⛅";
+  if(c.startsWith("04")) return "☁️";
+  if(c.startsWith("09")) return "🌧";
+  if(c.startsWith("10")) return "🌦";
+  if(c.startsWith("11")) return "⛈";
+  if(c.startsWith("13")) return "🌨";
+  if(c.startsWith("50")) return "🌫";
+  return "🌡";
+}
+
+function levelColor(level){
+  if(level === "danger")         return "#ef4444";
+  if(level === "caution-status") return "#f59e0b";
+  return "#12b76a";
+}
+
+function pmLabel(val){
+  if(val == null) return { text:"-", color:"#aaa" };
+  if(val <  15)  return { text:"좋음",    color:"#3b82f6" };
+  if(val <  35)  return { text:"보통",    color:"#22c55e" };
+  if(val <  75)  return { text:"나쁨",    color:"#f59e0b" };
+                 return { text:"매우나쁨",color:"#ef4444" };
+}
+
+// =============================================
+// 데이터 로드
+// =============================================
+async function loadAll(){
+  document.getElementById("rtLoading").style.display  = "flex";
+  document.getElementById("rtGrid").style.display     = "none";
+  document.getElementById("detailPanel").style.display = "none";
+
+  allData = await Promise.all(
+    CITIES.map(async c => {
+      try {
+        const w = await loadSiteWeatherAndMent(c.lat, c.lon);
+        const a = await fetchKmaAlertSummary(c.stnId);
+        return { c, w, alert: a?.text || "특보 없음" };
+      } catch(e) {
+        return { c, w: null, alert: "오류" };
+      }
+    })
+  );
+
+  const now = new Date();
+  document.getElementById("lastUpdated").textContent =
+    `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")} 기준`;
+
+  document.getElementById("rtLoading").style.display = "none";
+  renderGrid();
+}
+
+// =============================================
+// 그리드 렌더링
+// =============================================
+function renderGrid(){
+  const grid = document.getElementById("rtGrid");
+  grid.style.display = "";
+  grid.innerHTML = "";
+
+  const filtered = activeReg === "all"
+    ? allData
+    : allData.filter(d => d.c.region === activeReg);
+
+  for(const d of filtered){
+    const { c, w, alert } = d;
+    if(!w){ 
+      const card = document.createElement("div");
+      card.className = "rt-card rt-card-err";
+      card.innerHTML = `<div class="rt-card-name">${c.name}</div><div class="muted" style="font-size:12px">로드 실패</div>`;
+      grid.appendChild(card);
+      continue;
+    }
+
+    const emoji = wxEmoji(w.current.icon);
+    const lc    = levelColor(w.decision.level);
+    const pm    = pmLabel(w.current.pm25);
+    const isSelected = selectedCity === c.name;
+
+    const card = document.createElement("div");
+    card.className = "rt-card" + (isSelected ? " rt-card-active" : "");
+    card.style.setProperty("--status-color", lc);
+    card.innerHTML = `
+      <div class="rt-card-top">
+        <div class="rt-card-region">${c.region}</div>
+        <div class="rt-card-status-dot" style="background:${lc}" title="${w.decision.statusText}"></div>
+      </div>
+      <div class="rt-card-emoji">${emoji}</div>
+      <div class="rt-card-name">${c.name}</div>
+      <div class="rt-card-temp">${Math.round(w.current.temp)}°C</div>
+      <div class="rt-card-desc">${w.current.desc}</div>
+      <div class="rt-card-row">
+        <span>💨 ${w.current.wind}m/s</span>
+        <span>💧 ${w.current.humidity}%</span>
+      </div>
+      <div class="rt-card-pm" style="color:${pm.color}">
+        🌫 PM2.5 ${w.current.pm25 != null ? Math.round(w.current.pm25)+'㎍ ' : ''}${pm.text}
+      </div>
+      <div class="rt-card-ment">${w.decision.statusText}</div>
+    `;
+    card.onclick = () => openDetail(d);
+    grid.appendChild(card);
+  }
+}
+
+// =============================================
+// 상세 패널
+// =============================================
+function openDetail(d){
+  const { c, w, alert } = d;
+  selectedCity = c.name;
+  renderGrid(); // 선택 하이라이트 갱신
+
+  const emoji  = wxEmoji(w.current.icon);
+  const lc     = levelColor(w.decision.level);
+  const pm25   = pmLabel(w.current.pm25);
+  const pm10   = pmLabel(w.current.pm10);
+
+  const extraHtml = (w.decision.extra||[]).map(t =>
+    `<li>${t}</li>`).join("");
+
+  document.getElementById("detailInner").innerHTML = `
+    <div class="dt-header">
+      <div>
+        <div class="dt-name">${c.name} <span class="dt-region">${c.region}</span></div>
+        <div class="dt-status" style="background:${lc}">${w.decision.statusText}</div>
+      </div>
+      <div class="dt-emoji">${emoji}</div>
+    </div>
+
+    <div class="dt-cards">
+      <div class="dt-card">
+        <div class="dt-card-label">기온</div>
+        <div class="dt-card-val">${Math.round(w.current.temp)}°C</div>
+      </div>
+      <div class="dt-card">
+        <div class="dt-card-label">풍속</div>
+        <div class="dt-card-val">${w.current.wind} m/s</div>
+      </div>
+      <div class="dt-card">
+        <div class="dt-card-label">습도</div>
+        <div class="dt-card-val">${w.current.humidity}%</div>
+      </div>
+      <div class="dt-card">
+        <div class="dt-card-label">강수(1h)</div>
+        <div class="dt-card-val">${w.current.rain1h > 0 ? w.current.rain1h+'mm' : '없음'}</div>
+      </div>
+      <div class="dt-card">
+        <div class="dt-card-label">PM2.5</div>
+        <div class="dt-card-val" style="color:${pm25.color}">
+          ${w.current.pm25 != null ? Math.round(w.current.pm25)+'㎍' : '-'}<br>
+          <span style="font-size:11px">${pm25.text}</span>
+        </div>
+      </div>
+      <div class="dt-card">
+        <div class="dt-card-label">PM10</div>
+        <div class="dt-card-val" style="color:${pm10.color}">
+          ${w.current.pm10 != null ? Math.round(w.current.pm10)+'㎍' : '-'}<br>
+          <span style="font-size:11px">${pm10.text}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dt-ment-box" style="border-left-color:${lc}">
+      <div class="dt-ment-title">🧠 작업 판단</div>
+      <div class="dt-ment">${w.decision.mainMsg}</div>
+      ${extraHtml ? `<ul class="dt-extra">${extraHtml}</ul>` : ""}
+    </div>
+
+    <div class="dt-12h">
+      <div class="dt-sub-title">⏭ 향후 12시간</div>
+      <div class="dt-12h-row">
+        <span>☔ 강수 최대 ${w.next12.maxRain}mm</span>
+        <span>❄️ 적설 최대 ${w.next12.maxSnow}mm</span>
+        <span>💨 풍속 최대 ${w.next12.maxWind}m/s</span>
+        <span>🌂 강수확률 ${Math.round(w.next12.popMax*100)}%</span>
+      </div>
+    </div>
+
+    <div class="dt-alert">
+      <div class="dt-sub-title">📣 기상청 특보</div>
+      <div class="dt-alert-text">${alert}</div>
+    </div>
+  `;
+
+  const panel = document.getElementById("detailPanel");
+  panel.style.display = "";
+  panel.scrollIntoView({ behavior:"smooth", block:"nearest" });
+}
+
+// =============================================
+// 탭 이벤트
+// =============================================
+document.getElementById("regionTabs").addEventListener("click", e => {
+  const btn = e.target.closest(".rt-tab");
+  if(!btn) return;
+  document.querySelectorAll(".rt-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeReg = btn.dataset.region;
+  selectedCity = null;
+  document.getElementById("detailPanel").style.display = "none";
+  renderGrid();
+});
+
+// =============================================
+// 초기 로드
+// =============================================
+loadAll();
+</script>
+
+</body>
+</html>
