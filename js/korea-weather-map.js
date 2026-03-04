@@ -196,6 +196,15 @@ function renderChart(data){
   });
 }
 
+function pmGradeLabel(val){
+  if(val == null) return "<span style='color:#aaa'>정보없음</span>";
+  const v = Math.round(val);
+  if(val <  15) return `<span style='color:#3b82f6;font-weight:800'>${v}㎍ 좋음</span>`;
+  if(val <  35) return `<span style='color:#22c55e;font-weight:800'>${v}㎍ 보통</span>`;
+  if(val <  75) return `<span style='color:#f59e0b;font-weight:800'>${v}㎍ 나쁨</span>`;
+                return `<span style='color:#ef4444;font-weight:800'>${v}㎍ 매우나쁨</span>`;
+}
+
 function setBriefBox(weather, alertText){
   const status = document.getElementById("briefStatus");
   const ment   = document.getElementById("briefMent");
@@ -213,7 +222,13 @@ function setBriefBox(weather, alertText){
     ment.classList.remove("muted");
   }
   if(alert){
-    alert.innerText = `📣 특보: ${alertText || "특보 없음"}`;
+    const pm25 = weather?.current?.pm25;
+    const pm10 = weather?.current?.pm10;
+    alert.innerHTML =
+      `📣 특보: ${alertText || "특보 없음"}<br>` +
+      `<span style="font-size:12px;margin-top:5px;display:block;">` +
+      `🌫 PM2.5 ${pmGradeLabel(pm25)} &nbsp;·&nbsp; PM10 ${pmGradeLabel(pm10)}` +
+      `</span>`;
     alert.classList.remove("muted");
   }
 }
@@ -277,11 +292,24 @@ async function initRealKoreaMap(){
   for(const r of results){
     const { c, w, alert } = r;
 
-    const temp = w?.current?.temp ?? 0;
-    const desc = w?.current?.desc ?? "정보 없음";
+    const temp     = w?.current?.temp ?? 0;
+    const desc     = w?.current?.desc ?? "정보 없음";
     const iconCode = w?.current?.icon || "01d";
-    const wind = w?.current?.wind ?? "-";
+    const wind     = w?.current?.wind ?? "-";
     const humidity = w?.current?.humidity ?? "-";
+    const pm25     = w?.current?.pm25;
+    const pm10     = w?.current?.pm10;
+
+    // 미세먼지 등급 텍스트+색상
+    function pmGrade(val){
+      if(val == null) return { text:"정보없음", color:"#aaa" };
+      if(val <  15)  return { text:"좋음",     color:"#3b82f6" };
+      if(val <  35)  return { text:"보통",     color:"#22c55e" };
+      if(val <  75)  return { text:"나쁨",     color:"#f59e0b" };
+                     return { text:"매우나쁨", color:"#ef4444" };
+    }
+    const pm25g = pmGrade(pm25);
+    const pm10g = pmGrade(pm10);
 
     const level = w?.decision?.level || "normal";
     const border = levelColor(level);
@@ -313,9 +341,11 @@ async function initRealKoreaMap(){
       <div style="font-family:'Noto Sans KR';font-size:14px;">
         <b>${c.name}</b><br><br>
         🌡 ${Math.round(temp)}°C · ☁ ${desc}<br>
-        💨 ${wind} m/s · 💧 ${humidity}%<br><br>
-        <b>${statusText}</b><br>
-        ${mainMsg}<br><br>
+        💨 ${wind} m/s · 💧 ${humidity}%<br>
+        🌫 PM2.5 <span style="color:${pm25g.color};font-weight:800;">${pm25 != null ? Math.round(pm25)+'㎍ ('+pm25g.text+')' : '정보없음'}</span>
+        &nbsp;·&nbsp; PM10 <span style="color:${pm10g.color};font-weight:800;">${pm10 != null ? Math.round(pm10)+'㎍ ('+pm10g.text+')' : '정보없음'}</span><br><br>
+        <b>${w?.decision?.statusText || "● 확인 필요"}</b><br>
+        ${w?.decision?.mainMsg || "날씨 정보를 확인 중입니다."}<br><br>
         📣 ${alert || "특보 없음"}<br>
         <span class="muted" style="font-size:12px;">(마커 클릭 시 하단 상세예보 표시)</span>
       </div>
